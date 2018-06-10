@@ -23,6 +23,8 @@ byte mac[] = LAUNCHPAD_MAC;
 // IPAddress server(173,194,33,104); // Google
 const char* server = "api.thingspeak.com";
 
+char receiveBuffer[1024] = {};
+
 // Initialize the Ethernet client library
 // with the IP address and port of the server
 // that you want to connect to (port 80 is default for HTTP):
@@ -46,6 +48,9 @@ void setup() {
 
 void loop()
 {
+  int i = 0;
+  char c;
+
   // if you get a connection, report back via serial:
   if (client.connect(server, 80)) {
     Serial.println("connected");
@@ -56,8 +61,8 @@ void loop()
   }
 
   // Make a HTTP request:
-//  client.println("GET /channels/412285/fields/1.csv?results=1");
-  client.println("GET /channels/" WEATHERSTATION_CHANNEL "/fields/3.csv?api_key=" WEATHERSTATION_KEY "&results=5");
+  //  client.println("GET /channels/412285/fields/1.csv?results=1");
+  client.println("GET /channels/" WEATHERSTATION_CHANNEL "/fields/3.json?api_key=" WEATHERSTATION_KEY "&results=1");
   client.println();
 
   // Need to check for connection and wait for characters
@@ -65,18 +70,30 @@ void loop()
   // Initially just use delay(), but replace with improved code using millis()
   delay(500);
 
-  // if there are incoming bytes available
-  // from the server, read them and print them:
-  while (client.available()) {
-    char c = client.read();
-    Serial.print(c);
+  while (client.connected()) {
+    /// Add a timeout with millis()
+    c = client.read();
+    if (c != -1) receiveBuffer[i++] = c;
+    if (i > sizeof(receiveBuffer) - 2) break;
   }
+  /*
+    // if there are incoming bytes available
+    // from the server, read them and print them:
+    while (client.available()) {
+      char c = client.read();
+      Serial.print(c);
+    }
 
-  // if the server's disconnected, stop the client:
-  if (!client.connected()) {
-    Serial.println("Not connected...");
-  }
-  
+    // if the server's disconnected, stop the client:
+    if (!client.connected()) {
+      Serial.println("Not connected...");
+    }
+  */
+
+  receiveBuffer[i] = '\0';
+  Serial.println("JSON received: ");
+  Serial.println(receiveBuffer);
+  Serial.println("");
   Serial.println("disconnecting. Waiting 30 seconds. ");
   client.stop();
   delay(30000);
