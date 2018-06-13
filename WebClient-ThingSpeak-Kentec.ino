@@ -53,8 +53,8 @@ void setup() {
   myScreen.begin();
   myScreen.setPenSolid(true);
   myScreen.setFontSolid(false);
-  myScreen.setFontSize(1);
-  myScreen.gText(0, 0, "ThingSpeak JSON Queries", whiteColour, blackColour, 2, 2);
+  myScreen.setFontSize(2);
+  myScreen.gText(0, 0, "ThingSpeak JSON Queries", blueColour, grayColour, 1, 1);
 
 }
 
@@ -76,8 +76,8 @@ void loop()
 
   // Make a HTTP request:
   //  client.println("GET /channels/412285/fields/4.csv?results=1");
-  // client.println("GET /channels/" WEATHERSTATION_CHANNEL "/fields/4.json?api_key=" WEATHERSTATION_KEY "&results=1");
-  client.println("GET /channels/" WEATHERSTATION_CHANNEL "/feeds.json?api_key=" WEATHERSTATION_KEY "&results=1");
+  // client.println("GET /channels/" WEATHERSTATION_CHANNEL "/fields/4.json?api_key=" WEATHERSTATION_KEY "&results=1"); // Get a specific feed from a channel
+  client.println("GET /channels/" WEATHERSTATION_CHANNEL "/feeds.json?api_key=" WEATHERSTATION_KEY "&results=1"); // Get all feeds from a channel
   client.println();
 
   // Need to check for connection and wait for characters
@@ -152,15 +152,18 @@ void loop()
 
     snprintf(printBuffer, 32, "%i.%i", Tf / 10, Tf % 10);
 
-    myScreen.gText(0, 20, "Outdoor Temp: ");
-    myScreen.gText(80, 20, prevPrintBuffer, blackColour);
-    myScreen.gText(80, 20, printBuffer);
+    //myScreen.clear(); // Default color is blackColour
+    myScreen.setFontSize(1);
+    myScreen.gText(0, 17, "Outdoor Temp: ");
+    myScreen.setFontSize(0);
+    myScreen.gText(8*14, 24, prevPrintBuffer, blackColour);
+    myScreen.gText(8*14, 24, printBuffer);
     strncpy(prevPrintBuffer, printBuffer, 32);
   }
   else
   {
     Serial.println("JSON parse failed.");
-    
+
     myScreen.gText(0, 20, "Outdoor Temp: ");
     myScreen.gText(80, 20, prevPrintBuffer, blackColour);
     myScreen.gText(80, 20, "N/A");
