@@ -66,24 +66,7 @@ void setup() {
   Serial.print("Orientation: ");
   Serial.println(myScreen.getOrientation());
 
-  /// Display character map
-
-  unsigned char tempChar[2];
-  tempChar[1] = '\0';
-  tempChar[0] = 128;
-  int i, j; 
-
-  delay(2000);
-  myScreen.clear();
-  for (j = 0; j<8; j++)
-  {
-    for (i = 0; i<16; i++) {
-      myScreen.gText(i*12, j*16, (const char*) tempChar);
-      tempChar[0]++;
-    }
-  }
-  // delay(60000);
-  /// End display char map
+  /// DisplayCharacterMap();
 
   /// Test Display positions
   delay(2000);
@@ -122,9 +105,7 @@ void setup() {
   myScreen.gText(layout.TimeAndDateTitle.x, layout.TimeAndDateTitle.y, TimeAndDateTitle);
   myScreen.gText(layout.TimeAndDateValue.x, layout.TimeAndDateValue.y, "14-Jun 14:50:00Z");
 
-
-
-  delay(30000);
+  delay(5000);
   myScreen.clear();
   myScreen.setOrientation(3);
   /// End of display position test
@@ -147,10 +128,7 @@ void loop()
   }
 
   // Make a HTTP request:
-  //  client.println("GET /channels/412285/fields/4.csv?results=1");
-  // client.println("GET /channels/" WEATHERSTATION_CHANNEL "/fields/4.json?api_key=" WEATHERSTATION_KEY "&results=1"); // Get a specific feed from a channel
-  client.println("GET /channels/" WEATHERSTATION_CHANNEL "/feeds.json?api_key=" WEATHERSTATION_KEY "&results=1"); // Get all feeds from a channel
-  client.println();
+  GetThingSpeakChannel(&client, WEATHERSTATION_CHANNEL, WEATHERSTATION_KEY, 1);
 
   // Need to check for connection and wait for characters
   // Need to timeout after some time, but not too soon before receiving response
@@ -242,3 +220,32 @@ void loop()
   delay(30000);
 }
 
+void GetThingSpeakChannel(EthernetClient* c, const char* chan, const char* key, int results)
+{
+  const int BUF_SIZE = 256;
+  char buffer[BUF_SIZE];
+
+  snprintf(buffer, BUF_SIZE, "GET /channels/%s/feeds.json?api_key=%s&results=%d", chan, key, results);
+  /// Serial.println(buffer);
+  c->println(buffer);
+  c->println();
+}
+
+void DisplayCharacterMap()
+{
+  unsigned char tempChar[2];
+  tempChar[1] = '\0';
+  tempChar[0] = 128;
+  int i, j;
+
+  delay(2000);
+  myScreen.clear();
+  for (j = 0; j < 8; j++)
+  {
+    for (i = 0; i < 16; i++) {
+      myScreen.gText(i * 12, j * 16, (const char*) tempChar);
+      tempChar[0]++;
+    }
+  }
+  // delay(60000);
+}
