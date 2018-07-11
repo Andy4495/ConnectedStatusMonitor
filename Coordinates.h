@@ -63,15 +63,16 @@ const char Sensor5Subtitle[]  = "Sensor5:";
 Layout::Layout() {
   WeatherTitle.x =          0;  // Centered = 78
   WeatherTitle.y =          0;
-  WeatherTempValue.x =    143;  // "100.1 " -> 6 chars * 12 = 72 -> 215 - 72 = 143
+  // Align all weather values relative to longest units ("inHG") at 191
+  WeatherTempValue.x =    119;  // "100.1 " -> 6 chars * 12 = 72 -> 191 - 72 = 119
   WeatherTempValue.y =     16;
   WeatherTempUnits.x =    215;
   WeatherTempUnits.y =     16;
-  WeatherLuxValue.x =      71;  // "99,999,999 " -> 11 chars * 12 = 132 -> 203 - 132 = 71
+  WeatherLuxValue.x =      59;  // "99,999,999 " -> 11 chars * 12 = 132 -> 191 - 132 = 59
   WeatherLuxValue.y =      32;
   WeatherLuxUnits.x =     203;
   WeatherLuxUnits.y =      32;
-  WeatherRHValue.x =      143;  // "58.2 " -> 5 chars * 12 = 60 -> 203 - 60 = 143
+  WeatherRHValue.x =      131;  // "58.2 " -> 5 chars * 12 = 60 -> 191 - 60 = 131
   WeatherRHValue.y =       48;
   WeatherRHUnits.x =      203;
   WeatherRHUnits.y =       48;

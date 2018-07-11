@@ -19,7 +19,11 @@
 
   *** Future improvements:
     Color a sensor value (or the label) yellow or red if an update has not been received for more than X minutes
-
+    Add a pixel to y-coordinates to allow for hanging comma space (otherwise comma touches next line)
+    All values should be right-justified
+    Update lux string to include commas
+    Use TMP007-INT for Outdoor Weather temp value (instead of MSP430 internal temp)
+    Have pressure indicate increasing or decreasing since last measurement (or same or if last measure was N/A)
 
 */
 #include <ArduinoJson.h>
@@ -117,11 +121,11 @@ void setup() {
   myScreen.gText(layout.WeatherTitle.x, layout.WeatherTitle.y, WeatherTitle);
   // myScreen.gText(layout.WeatherTempValue.x, layout.WeatherTempValue.y, " 78.6");
   myScreen.gText(layout.WeatherTempUnits.x, layout.WeatherTempUnits.y, DegreesF);
-  // myScreen.gText(layout.WeatherLuxValue.x, layout.WeatherLuxValue.y, "99,999,999");
+  //  myScreen.gText(layout.WeatherLuxValue.x, layout.WeatherLuxValue.y, "99,999,999");
   myScreen.gText(layout.WeatherLuxUnits.x, layout.WeatherLuxUnits.y, Lux);
-  // myScreen.gText(layout.WeatherRHValue.x, layout.WeatherRHValue.y, "58.1");
+  //  myScreen.gText(layout.WeatherRHValue.x, layout.WeatherRHValue.y, "58.1");
   myScreen.gText(layout.WeatherRHUnits.x, layout.WeatherRHUnits.y, RH);
-  myScreen.gText(layout.WeatherPValue.x, layout.WeatherPValue.y, "29.99");
+  //  myScreen.gText(layout.WeatherPValue.x, layout.WeatherPValue.y, "29.99");
   myScreen.gText(layout.WeatherPUnits.x, layout.WeatherPUnits.y, inHG);
   myScreen.gText(layout.SlimTitle.x, layout.SlimTitle.y, SlimTitle);
   // myScreen.gText(layout.SlimTempValue.x, layout.SlimTempValue.y, " 88.8");
@@ -245,6 +249,9 @@ void loop()
     //    const char* feeds0_field3 = feeds0["field4"]; // "669"
 
     long Tf = strtol(feeds0["field4"], NULL, 10);
+    long lux = strtol(feeds0["field7"], NULL, 10);
+    long rh = strtol(feeds0["field5"], NULL, 10);
+    long p = strtol(feeds0["field6"], NULL, 10);
 
     Serial.println("Parsed JSON: ");
     Serial.print("Created at: ");
@@ -252,12 +259,15 @@ void loop()
     Serial.print("Entry ID: ");
     Serial.println(feeds0_entry_id);
 
-    snprintf(outdoorTemp, TEMPSIZE, "%i.%i", Tf / 10, Tf % 10);
+    snprintf(outdoorTemp, TEMPSIZE, "%3i.%i", Tf / 10, Tf % 10);
+    snprintf(outdoorLux, LUXSIZE, "%8i", lux);
+    snprintf(outdoorRH, RHSIZE, "%2i.%i", rh / 10, rh % 10);
+    snprintf(outdoorP, PSIZE, "%2i.%02i", p / 100, p % 100);
   }
   else
   {
     Serial.println("JSON parse failed.");
-    snprintf(outdoorTemp, TEMPSIZE, "N/A");
+    snprintf(outdoorTemp, TEMPSIZE, "  N/A");
   }
 
   ///
@@ -275,6 +285,18 @@ void loop()
   myScreen.gText(layout.WeatherTempValue.x, layout.WeatherTempValue.y, prevOutdoorTemp, blackColour);
   myScreen.gText(layout.WeatherTempValue.x, layout.WeatherTempValue.y, outdoorTemp);
   strncpy(prevOutdoorTemp, outdoorTemp, TEMPSIZE);
+
+  myScreen.gText(layout.WeatherLuxValue.x, layout.WeatherLuxValue.y, prevOutdoorLux, blackColour);
+  myScreen.gText(layout.WeatherLuxValue.x, layout.WeatherLuxValue.y, outdoorLux);
+  strncpy(prevOutdoorLux, outdoorLux, LUXSIZE);
+
+  myScreen.gText(layout.WeatherRHValue.x, layout.WeatherRHValue.y, prevOutdoorRH, blackColour);
+  myScreen.gText(layout.WeatherRHValue.x, layout.WeatherRHValue.y, outdoorRH);
+  strncpy(prevOutdoorRH, outdoorRH, RHSIZE);
+
+  myScreen.gText(layout.WeatherPValue.x, layout.WeatherPValue.y, prevOutdoorP, blackColour);
+  myScreen.gText(layout.WeatherPValue.x, layout.WeatherPValue.y, outdoorP);
+  strncpy(prevOutdoorP, outdoorP, PSIZE);
 
 
   Serial.println("Disconnecting. Waiting 30 seconds before next query. ");
