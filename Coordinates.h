@@ -48,7 +48,7 @@ const char TimeAndDateTitle[] = "Time and Date";
 const char DegreesF[] = {176, 'F', 0};
 const char Lux[] = "LUX";
 const char RH[] = "%RH";
-const char inHG[] = "in HG";
+const char inHG[] = "inHG";
 const char V[] = "V";
 const char OutdoorSubtitle[]  = "Outdoor:";
 const char SlimSubtitle[]     = "Slim:";
@@ -75,9 +75,9 @@ Layout::Layout() {
   WeatherRHValue.y =       48;
   WeatherRHUnits.x =      203;
   WeatherRHUnits.y =       48;
-  WeatherPValue.x =       107;  // "29.32 " -> 6 chars * 12 = 72 -> 179 - 72 = 107
+  WeatherPValue.x =       119;  // "29.32 " -> 6 chars * 12 = 72 -> 191 - 72 = 119
   WeatherPValue.y =        64;
-  WeatherPUnits.x =       179;
+  WeatherPUnits.x =       191;
   WeatherPUnits.y =        64;
   SlimTitle.x =             0;  // Centered = 96
   SlimTitle.y =            80;

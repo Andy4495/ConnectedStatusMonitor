@@ -10,6 +10,17 @@
   created 18 Dec 2009
   by David A. Mellis
 
+  Major modifications to create a status display for
+  ThingSpeak weather station.
+  Designed specifically for use with TM4C129 Connected LaunchPad
+  and Kentec Touch Display BoosterPack (SPI)
+
+  07/10/2018 - A.T. - Adding in more status items to display.
+
+  *** Future improvements:
+    Color a sensor value (or the label) yellow or red if an update has not been received for more than X minutes
+
+
 */
 #include <ArduinoJson.h>
 #include <SPI.h>
@@ -39,6 +50,37 @@ EthernetClient client;
 
 Layout layout;
 
+//----- Sensor Reading Global Storage -----//
+#define TEMPSIZE  6
+#define LUXSIZE  11
+#define RHSIZE    5
+#define PSIZE     6
+#define GDSIZE    7
+#define BATTSIZE  6
+#define TADSIZE  17
+char outdoorTemp[TEMPSIZE];
+char prevOutdoorTemp[TEMPSIZE];
+char outdoorLux[LUXSIZE];
+char prevOutdoorLux[LUXSIZE];
+char outdoorRH[RHSIZE];
+char prevOutdoorRH[RHSIZE];
+char outdoorP[PSIZE];
+char prevOutdoorP[PSIZE];
+char slimTemp[TEMPSIZE];
+char prevSlimTemp[TEMPSIZE];
+char worksopTemp[TEMPSIZE];
+char prevWorkshopTemp[TEMPSIZE];
+char garageDoor[GDSIZE];
+char prevGarageDoor[GDSIZE];
+char outdoorBatt[BATTSIZE];
+char prevOutdoorBatt[BATTSIZE];
+char slimBatt[BATTSIZE];
+char prevSlimBatt[BATTSIZE];
+char workshopBatt[BATTSIZE];
+char prevWorkshopBatt[BATTSIZE];
+char timeAndDate[TADSIZE];
+char prevTimeAndDate[TADSIZE];
+
 void setup() {
   // start the serial library:
   Serial.begin(9600);
@@ -57,58 +99,71 @@ void setup() {
   myScreen.setPenSolid(true);
   myScreen.setFontSolid(false);
   myScreen.setFontSize(2);
-  myScreen.setOrientation(3);
-  myScreen.gText(0, 0, "ThingSpeak JSON Queries", blueColour, grayColour, 1, 1);
+  myScreen.setOrientation(0);
+  myScreen.gText(0, 0, "Weather Station", blueColour, blackColour, 1, 1);
 
-  myScreen.circle(154, 137, 102, orangeColour);
-  myScreen.circle(154, 137, 101, blackColour);
+  //  myScreen.circle(154, 137, 102, orangeColour);
+  //  myScreen.circle(154, 137, 101, blackColour);
 
-  Serial.print("Orientation: ");
-  Serial.println(myScreen.getOrientation());
+  //  Serial.print("Orientation: ");
+  //  Serial.println(myScreen.getOrientation());
 
-  /// DisplayCharacterMap();
+  //  DisplayCharacterMap();
 
   /// Test Display positions
   delay(2000);
   myScreen.setOrientation(0);
   myScreen.clear();
   myScreen.gText(layout.WeatherTitle.x, layout.WeatherTitle.y, WeatherTitle);
-  myScreen.gText(layout.WeatherTempValue.x, layout.WeatherTempValue.y, " 78.6");
+  // myScreen.gText(layout.WeatherTempValue.x, layout.WeatherTempValue.y, " 78.6");
   myScreen.gText(layout.WeatherTempUnits.x, layout.WeatherTempUnits.y, DegreesF);
-  myScreen.gText(layout.WeatherLuxValue.x, layout.WeatherLuxValue.y, "99,999,999");
+  // myScreen.gText(layout.WeatherLuxValue.x, layout.WeatherLuxValue.y, "99,999,999");
   myScreen.gText(layout.WeatherLuxUnits.x, layout.WeatherLuxUnits.y, Lux);
-  myScreen.gText(layout.WeatherRHValue.x, layout.WeatherRHValue.y, "58.1");
+  // myScreen.gText(layout.WeatherRHValue.x, layout.WeatherRHValue.y, "58.1");
   myScreen.gText(layout.WeatherRHUnits.x, layout.WeatherRHUnits.y, RH);
   myScreen.gText(layout.WeatherPValue.x, layout.WeatherPValue.y, "29.99");
   myScreen.gText(layout.WeatherPUnits.x, layout.WeatherPUnits.y, inHG);
   myScreen.gText(layout.SlimTitle.x, layout.SlimTitle.y, SlimTitle);
-  myScreen.gText(layout.SlimTempValue.x, layout.SlimTempValue.y, " 88.8");
+  // myScreen.gText(layout.SlimTempValue.x, layout.SlimTempValue.y, " 88.8");
   myScreen.gText(layout.SlimTempUnits.x, layout.SlimTempUnits.y, DegreesF);
   myScreen.gText(layout.WorkshopTitle.x, layout.WorkshopTitle.y, WorkshopTitle);
-  myScreen.gText(layout.WorkshopTempValue.x, layout.WorkshopTempValue.y, " 56.1");
+  // myScreen.gText(layout.WorkshopTempValue.x, layout.WorkshopTempValue.y, " 56.1");
   myScreen.gText(layout.WorkshopTempUnits.x, layout.WorkshopTempUnits.y, DegreesF);
   myScreen.gText(layout.GDTitle.x, layout.GDTitle.y, GDTitle);
-  myScreen.gText(layout.GDValue.x, layout.GDValue.y, "CLOSED", greenColour);
+  // myScreen.gText(layout.GDValue.x, layout.GDValue.y, "CLOSED", greenColour);
   myScreen.gText(layout.BattTitle.x, layout.BattTitle.y, BatteriesTitle);
   myScreen.gText(layout.BattOutdoorSubtitle.x, layout.BattOutdoorSubtitle.y, OutdoorSubtitle);
-  myScreen.gText(layout.BattOutdoorValue.x, layout.BattOutdoorValue.y, "3.123");
+  // myScreen.gText(layout.BattOutdoorValue.x, layout.BattOutdoorValue.y, "3.123");
   myScreen.gText(layout.BattOutdoorUnits.x, layout.BattOutdoorValue.y, V);
   myScreen.gText(layout.BattSlimSubtitle.x, layout.BattSlimSubtitle.y, SlimSubtitle);
-  myScreen.gText(layout.BatSlimValue.x, layout.BatSlimValue.y, "2.999");
+  // myScreen.gText(layout.BatSlimValue.x, layout.BatSlimValue.y, "2.999");
   myScreen.gText(layout.BattSlimUnits.x, layout.BattSlimUnits.y, V);
   myScreen.gText(layout.BattWorkshopSubtitle.x, layout.BattWorkshopSubtitle.y, WorkshopSubtitle);
-  myScreen.gText(layout.BattWorkshopValue.x, layout.BattWorkshopValue.y, "3.719");
+  // myScreen.gText(layout.BattWorkshopValue.x, layout.BattWorkshopValue.y, "3.719");
   myScreen.gText(layout.BattWorkshopUnits.x, layout.BattWorkshopUnits.y, V);
-  myScreen.gText(layout.BattSensor5Subtitle.x, layout.BattSensor5Subtitle.y, Sensor5Subtitle);
-  myScreen.gText(layout.BattSensor5Value.x, layout.BattSensor5Value.y, "2.888");
+  //  myScreen.gText(layout.BattSensor5Subtitle.x, layout.BattSensor5Subtitle.y, Sensor5Subtitle);
+  // myScreen.gText(layout.BattSensor5Value.x, layout.BattSensor5Value.y, "2.888");
   myScreen.gText(layout.BattSensor5Units.x, layout.BattSensor5Units.y, V);
   myScreen.gText(layout.TimeAndDateTitle.x, layout.TimeAndDateTitle.y, TimeAndDateTitle);
-  myScreen.gText(layout.TimeAndDateValue.x, layout.TimeAndDateValue.y, "14-Jun 14:50:00Z");
+  // myScreen.gText(layout.TimeAndDateValue.x, layout.TimeAndDateValue.y, "14-Jun 14:50:00Z");
 
-  delay(5000);
-  myScreen.clear();
-  myScreen.setOrientation(3);
+  // delay(5000);
+  // myScreen.clear();
+  // myScreen.setOrientation(3);
   /// End of display position test
+
+  // Initialze the "previous" strings to empty
+  prevOutdoorTemp[0] = 0;
+  prevOutdoorLux[0] = 0;
+  prevOutdoorRH[0] = 0;
+  prevOutdoorP[0] = 0;
+  prevSlimTemp[0] = 0;
+  prevWorkshopTemp[0] = 0;
+  prevGarageDoor[0] = 0;
+  prevOutdoorBatt[0] = 0;
+  prevSlimBatt[0] = 0;
+  prevWorkshopBatt[0] = 0;
+  prevTimeAndDate[0] = 0;
 }
 
 void loop()
@@ -187,34 +242,40 @@ void loop()
     JsonObject& feeds0 = root["feeds"][0];
     const char* feeds0_created_at = feeds0["created_at"]; // "2018-06-10T22:26:23Z"
     long feeds0_entry_id = feeds0["entry_id"]; // 90649
-    const char* feeds0_field3 = feeds0["field4"]; // "669"
+    //    const char* feeds0_field3 = feeds0["field4"]; // "669"
 
-    long Tf = strtol(feeds0_field3, NULL, 10);
+    long Tf = strtol(feeds0["field4"], NULL, 10);
+
     Serial.println("Parsed JSON: ");
     Serial.print("Created at: ");
     Serial.println(feeds0_created_at);
     Serial.print("Entry ID: ");
     Serial.println(feeds0_entry_id);
-    Serial.print("Temperature: ");
-    Serial.print(Tf / 10);
-    Serial.print(".");
-    Serial.println(Tf % 10);
 
-    snprintf(printBuffer, 32, "%i.%i", Tf / 10, Tf % 10);
+    snprintf(outdoorTemp, TEMPSIZE, "%i.%i", Tf / 10, Tf % 10);
   }
   else
   {
     Serial.println("JSON parse failed.");
-    snprintf(printBuffer, 32, "N/A");
+    snprintf(outdoorTemp, TEMPSIZE, "N/A");
   }
 
-  //myScreen.clear(); // Default color is blackColour
-  myScreen.setFontSize(1);
-  myScreen.gText(0, 24, "Outdoor Temp: ");
-  myScreen.setFontSize(0);
-  myScreen.gText(8 * 14, 27, prevPrintBuffer, blackColour);
-  myScreen.gText(8 * 14, 27, printBuffer);
-  strncpy(prevPrintBuffer, printBuffer, 32);
+  ///
+  /*
+    //myScreen.clear(); // Default color is blackColour
+    myScreen.setFontSize(1);
+    myScreen.gText(0, 24, "Outdoor Temp: ");
+    myScreen.setFontSize(0);
+    myScreen.gText(8 * 14, 27, prevPrintBuffer, blackColour);
+    myScreen.gText(8 * 14, 27, printBuffer);
+    strncpy(prevPrintBuffer, printBuffer, 32);
+  */
+  ///
+
+  myScreen.gText(layout.WeatherTempValue.x, layout.WeatherTempValue.y, prevOutdoorTemp, blackColour);
+  myScreen.gText(layout.WeatherTempValue.x, layout.WeatherTempValue.y, outdoorTemp);
+  strncpy(prevOutdoorTemp, outdoorTemp, TEMPSIZE);
+
 
   Serial.println("Disconnecting. Waiting 30 seconds before next query. ");
   delay(30000);
