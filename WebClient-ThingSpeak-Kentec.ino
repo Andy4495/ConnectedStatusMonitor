@@ -1,30 +1,21 @@
 /*
-  Web client
-
-  This sketch connects to a website (http://www.google.com)
-  using an Arduino Wiznet Ethernet shield.
-
-  Circuit:
-   Ethernet shield attached to pins 10, 11, 12, 13
-
-  created 18 Dec 2009
-  by David A. Mellis
-
-  Major modifications to create a status display for
-  ThingSpeak weather station.
+  SENSOR STATUS DISPLAY
+ 
+  Status display for various sensor data readings downloaded from ThingSpeak IoT Platform. 
   Designed specifically for use with TM4C129 Connected LaunchPad
   and Kentec Touch Display BoosterPack (SPI)
+  Initial web connection code based on "Web client" example sketch by David A. Mellis.
 
-  07/10/2018 - A.T. - Adding in more status items to display.
+  07/10/2018 - A.T. - Initial updates
+  08/17/2018 - A.T. - Functional display code for weather station, workshop and slim temps, and garage door status.
 
   *** Future improvements:
     Color a sensor value (or the label) yellow or red if an update has not been received for more than X minutes
     Add a pixel to y-coordinates to allow for hanging comma space (otherwise comma touches next line)
     All values should be right-justified
     Update lux string to include commas
-    Use TMP007-INT for Outdoor Weather temp value (instead of MSP430 internal temp)
     Have pressure indicate increasing or decreasing since last measurement (or same or if last measure was N/A)
-    Deal with bad JSON -- maybe just display last good value (i.e., no display indication of bad JSON)
+    Deal with JSON parse failure -- maybe just display last good value (i.e., no display indication of bad JSON)
 
 */
 #include <ArduinoJson.h>
@@ -275,7 +266,7 @@ void getAndDisplayWeather() {
     const char* feeds0_created_at = feeds0["created_at"]; // "2018-06-10T22:26:23Z"
     long feeds0_entry_id = feeds0["entry_id"]; // 90649
 
-    long Tf = strtol(feeds0["field4"], NULL, 10);
+    long Tf = strtol(feeds0["field3"], NULL, 10);
     long lux = strtol(feeds0["field7"], NULL, 10);
     long rh = strtol(feeds0["field5"], NULL, 10);
     long p = strtol(feeds0["field6"], NULL, 10);
