@@ -27,7 +27,7 @@ struct Layout {
   Coord BattOutdoorValue;
   Coord BattOutdoorUnits;
   Coord BattSlimSubtitle;
-  Coord BatSlimValue;
+  Coord BattSlimValue;
   Coord BattSlimUnits;
   Coord BattWorkshopSubtitle;
   Coord BattWorkshopValue;
@@ -61,54 +61,54 @@ const char Sensor5Subtitle[]  = "Sensor5:";
 #define SCREEN_WIDTH_Y       240
 
 Layout::Layout() {
-  WeatherTitle.x =          0;  // Centered = 78
-  WeatherTitle.y =          0;
+  WeatherTitle.x =           0;  // Centered = 78
+  WeatherTitle.y =           0;
   // Align all weather values relative to longest units ("inHG") at 191
-  WeatherTempValue.x =    119;  // "100.1 " -> 6 chars * 12 = 72 -> 191 - 72 = 119
-  WeatherTempValue.y =     16;
-  WeatherTempUnits.x =    215;
-  WeatherTempUnits.y =     16;
-  WeatherLuxValue.x =      59;  // "99,999,999 " -> 11 chars * 12 = 132 -> 191 - 132 = 59
-  WeatherLuxValue.y =      32;
-  WeatherLuxUnits.x =     203;
-  WeatherLuxUnits.y =      32;
-  WeatherRHValue.x =      131;  // "58.2 " -> 5 chars * 12 = 60 -> 191 - 60 = 131
-  WeatherRHValue.y =       48;
-  WeatherRHUnits.x =      203;
-  WeatherRHUnits.y =       48;
-  WeatherPValue.x =       119;  // "29.32 " -> 6 chars * 12 = 72 -> 191 - 72 = 119
-  WeatherPValue.y =        64;
-  WeatherPUnits.x =       191;
-  WeatherPUnits.y =        64;
-  SlimTitle.x =             0;  // Centered = 96
-  SlimTitle.y =            80;
-  SlimTempValue.x =       143;  // "100.1 " -> 6 chars * 12 = 72 -> 215 - 72 = 143
-  SlimTempValue.y =        96;
-  SlimTempUnits.x =       215;
-  SlimTempUnits.y =        96;
-  WorkshopTitle.x =         0;  // Centered = 72
-  WorkshopTitle.y =       112;
-  WorkshopTempValue.x =   143;  // "100.1 " -> 6 chars * 12 = 72 -> 215 - 72 = 143
-  WorkshopTempValue.y =   128;
-  WorkshopTempUnits.x =   215;
-  WorkshopTempUnits.y =   128;
-  GDTitle.x =               0;  // Centered = 54
-  GDTitle.y =             144;
-  GDValue.x =             167;  // "Closed" -> 6 chars * 12 = 72 -> 239 - 72 = 167
-  GDValue.y =             160;
-  BattTitle.x =             0;  // Centered = 66
-  BattTitle.y =           176;
-  BattOutdoorSubtitle.x =  24; 
-  BattOutdoorSubtitle.y = 192;
-  BattOutdoorValue.x =    155;  // "3.123 " -> 6 chars * 12 = 72 -> 227 - 72 = 155
-  BattOutdoorValue.y =    192;
-  BattOutdoorUnits.x =    227;
-  BattOutdoorUnits.y =    192;
-  BattSlimSubtitle.x =     24;
-  BattSlimSubtitle.y =    208;
-  BatSlimValue.x =        155;  // "3.123 " -> 6 chars * 12 = 72 -> 227 - 72 = 155
-  BatSlimValue.y =        208;
-  BattSlimUnits.x =       227;
+  WeatherTempValue.x =     119;  // "100.1 " -> 6 chars * 12 = 72 -> 191 - 72 = 119
+  WeatherTempValue.y =      16;
+  WeatherTempUnits.x =     215;
+  WeatherTempUnits.y =      16;
+  WeatherLuxValue.x =       83;  // "99999999 " -> 9 chars * 12 = 108 -> 191 - 108 = 83
+  WeatherLuxValue.y =       32;
+  WeatherLuxUnits.x =      203;
+  WeatherLuxUnits.y =       32;
+  WeatherRHValue.x =       131;  // "58.2 " -> 5 chars * 12 = 60 -> 191 - 60 = 131
+  WeatherRHValue.y =        48;
+  WeatherRHUnits.x =       203;
+  WeatherRHUnits.y =        48;
+  WeatherPValue.x =        119;  // "29.32 " -> 6 chars * 12 = 72 -> 191 - 72 = 119
+  WeatherPValue.y =         64;
+  WeatherPUnits.x =        191;
+  WeatherPUnits.y =         64;
+  SlimTitle.x =              0;  // Centered = 96
+  SlimTitle.y =             80;
+  SlimTempValue.x =        143;  // "100.1 " -> 6 chars * 12 = 72 -> 215 - 72 = 143
+  SlimTempValue.y =         96;
+  SlimTempUnits.x =        215;
+  SlimTempUnits.y =         96;
+  WorkshopTitle.x =          0;  // Centered = 72
+  WorkshopTitle.y =        112;
+  WorkshopTempValue.x =    143;  // "100.1 " -> 6 chars * 12 = 72 -> 215 - 72 = 143
+  WorkshopTempValue.y =    128;
+  WorkshopTempUnits.x =    215;
+  WorkshopTempUnits.y =    128;
+  GDTitle.x =                0;  // Centered = 54
+  GDTitle.y =              144;
+  GDValue.x =              167;  // "Closed" -> 6 chars * 12 = 72 -> 239 - 72 = 167
+  GDValue.y =              160;
+  BattTitle.x =              0;  // Centered = 66
+  BattTitle.y =            176;
+  BattOutdoorSubtitle.x =   24; 
+  BattOutdoorSubtitle.y =  192;
+  BattOutdoorValue.x =     155;  // "3.123 " -> 6 chars * 12 = 72 -> 227 - 72 = 155
+  BattOutdoorValue.y =     192;
+  BattOutdoorUnits.x =     227;
+  BattOutdoorUnits.y =     192;
+  BattSlimSubtitle.x =      24;
+  BattSlimSubtitle.y =     208;
+  BattSlimValue.x =        155;  // "3.123 " -> 6 chars * 12 = 72 -> 227 - 72 = 155
+  BattSlimValue.y =        208;
+  BattSlimUnits.x =        227;
   BattSlimUnits.y =        208;
   BattWorkshopSubtitle.x =  24;
   BattWorkshopSubtitle.y = 224;
