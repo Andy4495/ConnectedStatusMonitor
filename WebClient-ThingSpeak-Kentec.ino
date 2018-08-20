@@ -8,6 +8,8 @@
 
   07/10/2018 - A.T. - Initial updates
   08/17/2018 - A.T. - Functional display code for weather station, workshop and slim temps, and garage door status.
+  08/19/2018 - A.T. - Add state machine to turn on display depending on state of light sensor on pin A13
+  08/20/2018 - A.T. - Add NTP time to status display
 
 
   *** Future improvements:
@@ -22,6 +24,8 @@
 #include <ArduinoJson.h>
 #include <SPI.h>
 #include <Ethernet.h>
+#include <EthernetUdp.h>
+#include <TimeLib.h>
 #include "Screen_K35_SPI.h"
 Screen_K35_SPI myScreen;
 #include "ThingSpeakKeys.h"
@@ -31,8 +35,20 @@ Screen_K35_SPI myScreen;
 // Newer Ethernet shields have a MAC address printed on a sticker on the shield
 // byte mac[] = {  0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
 byte mac[] = LAUNCHPAD_MAC; // Defined in ThingSpeakKeys.h
-// IPAddress server(173,194,33,104); // Google
 const char* server = "api.thingspeak.com";
+
+IPAddress timeServer(96, 126, 100, 203); // pool.nts.org
+
+//const int timeZone = -6;  // Central Standard Time (USA)
+const int timeZone = -5;    // Central Daylight Time (USA)
+
+time_t t;
+
+EthernetUDP Udp;
+unsigned int localPort = 8888;  // local port to listen for UDP packets
+
+const int NTP_PACKET_SIZE = 48; // NTP time is in the first 48 bytes of message
+byte packetBuffer[NTP_PACKET_SIZE]; //buffer to hold incoming & outgoing packets
 
 char receiveBuffer[1024] = {};
 char printBuffer[32] = {};
@@ -129,6 +145,10 @@ void setup() {
   prevSlimBatt[0] = 0;
   prevWorkshopBatt[0] = 0;
   prevTimeAndDate[0] = 0;
+
+  Udp.begin(localPort);
+  Serial.println("Waiting for sync with NTP...");
+  setSyncProvider(getNtpTime);
 }
 
 void loop()
@@ -163,6 +183,7 @@ void loop()
         getAndDisplaySlim();
         getAndDisplayWorkshop();
         getAndDisplayGarage();
+        getAndDisplayTime();
         Serial.println("Disconnecting. Waiting 30 seconds before next query. ");
         delay(LIGHTS_ON_SLEEP_TIME);
       }
@@ -592,11 +613,38 @@ void getAndDisplayGarage() {
 
 } // getAndDisplayGarage()
 
+void getAndDisplayTime() {
+
+  int i = 0;
+  char c;
+
+  t = now(); // Get the current time
+  snprintf(timeAndDate, TADSIZE, "%2d %s %2d:%2d CDT", day(t), monthShortStr(month(t)), hour(t), minute(t));
+
+  Serial.print("t: ");
+  Serial.println(t);
+  Serial.print("Month: ");
+  Serial.print(month(t));
+  Serial.print(" - ");
+  Serial.println(monthShortStr(month(t)));
+  Serial.print("Day: ");
+  Serial.println(day(t));
+  Serial.print("Hour: ");
+  Serial.println(hour(t));
+  Serial.print("Minute: ");
+  Serial.println(minute(t));
+
+  myScreen.gText(layout.TimeAndDateValue.x, layout.TimeAndDateValue.y, prevTimeAndDate, blackColour);
+  myScreen.gText(layout.TimeAndDateValue.x, layout.TimeAndDateValue.y, timeAndDate);
+  strncpy(prevTimeAndDate, timeAndDate, TADSIZE);
+
+} // getAndDisplayTime()
+
 void displayWelcome() {
-//  myScreen.gText(0, 0, "Weather Station", blueColour, blackColour, 1, 1);
+  //  myScreen.gText(0, 0, "Weather Station", blueColour, blackColour, 1, 1);
   myScreen.gText(72,  60, "Welcome,", redColour, blackColour, 1, 1); // 240/2 - 12*8/2 = 72
   myScreen.gText(90, 120, "Andy!", redColour, blackColour, 1, 1);    // 240/2 - 12*5/2 = 90
-  
+
   delay(2000);
 }
 
@@ -621,6 +669,53 @@ void displayTitles() {
   myScreen.gText(layout.BattWorkshopSubtitle.x, layout.BattWorkshopSubtitle.y, WorkshopSubtitle);
   myScreen.gText(layout.BattWorkshopUnits.x, layout.BattWorkshopUnits.y, V);
   myScreen.gText(layout.TimeAndDateTitle.x, layout.TimeAndDateTitle.y, TimeAndDateTitle);
+}
+
+time_t getNtpTime()
+{
+  while (Udp.parsePacket() > 0) ; // discard any previously received packets
+  Serial.println("Transmit NTP Request");
+  sendNTPpacket(timeServer);
+  uint32_t beginWait = millis();
+  while (millis() - beginWait < 1500) {
+    int size = Udp.parsePacket();
+    if (size >= NTP_PACKET_SIZE) {
+      Serial.println("Receive NTP Response");
+      Udp.read(packetBuffer, NTP_PACKET_SIZE);  // read packet into the buffer
+      unsigned long secsSince1900;
+      // convert four bytes starting at location 40 to a long integer
+      secsSince1900 =  (unsigned long)packetBuffer[40] << 24;
+      secsSince1900 |= (unsigned long)packetBuffer[41] << 16;
+      secsSince1900 |= (unsigned long)packetBuffer[42] << 8;
+      secsSince1900 |= (unsigned long)packetBuffer[43];
+      return secsSince1900 - 2208988800UL + timeZone * SECS_PER_HOUR;
+    }
+  }
+  Serial.println("No NTP Response :-(");
+  return 0; // return 0 if unable to get the time
+}
+
+// send an NTP request to the time server at the given address
+void sendNTPpacket(IPAddress &address)
+{
+  // set all bytes in the buffer to 0
+  memset(packetBuffer, 0, NTP_PACKET_SIZE);
+  // Initialize values needed to form NTP request
+  // (see URL above for details on the packets)
+  packetBuffer[0] = 0b11100011;   // LI, Version, Mode
+  packetBuffer[1] = 0;     // Stratum, or type of clock
+  packetBuffer[2] = 6;     // Polling Interval
+  packetBuffer[3] = 0xEC;  // Peer Clock Precision
+  // 8 bytes of zero for Root Delay & Root Dispersion
+  packetBuffer[12]  = 49;
+  packetBuffer[13]  = 0x4E;
+  packetBuffer[14]  = 49;
+  packetBuffer[15]  = 52;
+  // all NTP fields have been given values, now
+  // you can send a packet requesting a timestamp:
+  Udp.beginPacket(address, 123); //NTP requests are to port 123
+  Udp.write(packetBuffer, NTP_PACKET_SIZE);
+  Udp.endPacket();
 }
 
 void DisplayCharacterMap()
