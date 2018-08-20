@@ -1,13 +1,14 @@
 /*
   SENSOR STATUS DISPLAY
- 
-  Status display for various sensor data readings downloaded from ThingSpeak IoT Platform. 
+
+  Status display for various sensor data readings downloaded from ThingSpeak IoT Platform.
   Designed specifically for use with TM4C129 Connected LaunchPad
   and Kentec Touch Display BoosterPack (SPI)
   Initial web connection code based on "Web client" example sketch by David A. Mellis.
 
   07/10/2018 - A.T. - Initial updates
   08/17/2018 - A.T. - Functional display code for weather station, workshop and slim temps, and garage door status.
+
 
   *** Future improvements:
     Color a sensor value (or the label) yellow or red if an update has not been received for more than X minutes
@@ -29,7 +30,7 @@ Screen_K35_SPI myScreen;
 // Enter a MAC address for your controller below.
 // Newer Ethernet shields have a MAC address printed on a sticker on the shield
 // byte mac[] = {  0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
-byte mac[] = LAUNCHPAD_MAC;
+byte mac[] = LAUNCHPAD_MAC; // Defined in ThingSpeakKeys.h
 // IPAddress server(173,194,33,104); // Google
 const char* server = "api.thingspeak.com";
 
@@ -37,6 +38,8 @@ char receiveBuffer[1024] = {};
 char printBuffer[32] = {};
 char prevPrintBuffer[32] = {};
 
+// Based on the Arduinojson.org site, this is the size needed for the buffer for the longest message (weather station)
+// (Actually, the final term could be "+ 542", but I changed it to "+ 600" just to be on the safe side.
 const size_t bufferSize = JSON_ARRAY_SIZE(1) + JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(10) + JSON_OBJECT_SIZE(16) + 600;
 
 // Initialize the Ethernet client library
@@ -77,7 +80,20 @@ char prevWorkshopBatt[BATTSIZE];
 char timeAndDate[TADSIZE];
 char prevTimeAndDate[TADSIZE];
 
+#define LIGHT_SENSOR_PIN           42
+#define LIGHT_SENSOR_ADC          A13
+#define LIGHT_SENSOR_THRESHOLD   2000
+#define LIGHTS_ON_SLEEP_TIME    30000
+#define LIGHTS_OFF_SLEEP_TIME    5000
+#define BACKLIGHT_PIN              40
+
+enum {LIGHTS_OFF, LIGHTS_TURNED_ON, LIGHTS_ON, LIGHTS_TURNED_OFF};
+int lightSensorState = LIGHTS_OFF;
+
 void setup() {
+
+  pinMode(LIGHT_SENSOR_PIN, INPUT);
+
   // start the serial library:
   Serial.begin(9600);
   // start the Ethernet connection:
@@ -89,64 +105,17 @@ void setup() {
   }
   // give the Ethernet shield a second to initialize:
   delay(1000);
+  Serial.print("JsonBuffer size: ");
+  Serial.println(bufferSize);
   Serial.println("connecting...");
 
   myScreen.begin();
   myScreen.setPenSolid(true);
   myScreen.setFontSolid(false);
   myScreen.setFontSize(2);
-  myScreen.setOrientation(0);
-  myScreen.gText(0, 0, "Weather Station", blueColour, blackColour, 1, 1);
+  myScreen.setOrientation(2);
 
-  //  myScreen.circle(154, 137, 102, orangeColour);
-  //  myScreen.circle(154, 137, 101, blackColour);
-
-  //  Serial.print("Orientation: ");
-  //  Serial.println(myScreen.getOrientation());
-
-  //  DisplayCharacterMap();
-
-  /// Test Display positions
-  delay(2000);
-  myScreen.setOrientation(0);
-  myScreen.clear();
-  myScreen.gText(layout.WeatherTitle.x, layout.WeatherTitle.y, WeatherTitle);
-  // myScreen.gText(layout.WeatherTempValue.x, layout.WeatherTempValue.y, " 78.6");
-  myScreen.gText(layout.WeatherTempUnits.x, layout.WeatherTempUnits.y, DegreesF);
-  //  myScreen.gText(layout.WeatherLuxValue.x, layout.WeatherLuxValue.y, "99,999,999");
-  myScreen.gText(layout.WeatherLuxUnits.x, layout.WeatherLuxUnits.y, Lux);
-  //  myScreen.gText(layout.WeatherRHValue.x, layout.WeatherRHValue.y, "58.1");
-  myScreen.gText(layout.WeatherRHUnits.x, layout.WeatherRHUnits.y, RH);
-  //  myScreen.gText(layout.WeatherPValue.x, layout.WeatherPValue.y, "29.99");
-  myScreen.gText(layout.WeatherPUnits.x, layout.WeatherPUnits.y, inHG);
-  myScreen.gText(layout.SlimTitle.x, layout.SlimTitle.y, SlimTitle);
-  // myScreen.gText(layout.SlimTempValue.x, layout.SlimTempValue.y, " 88.8");
-  myScreen.gText(layout.SlimTempUnits.x, layout.SlimTempUnits.y, DegreesF);
-  myScreen.gText(layout.WorkshopTitle.x, layout.WorkshopTitle.y, WorkshopTitle);
-  // myScreen.gText(layout.WorkshopTempValue.x, layout.WorkshopTempValue.y, " 56.1");
-  myScreen.gText(layout.WorkshopTempUnits.x, layout.WorkshopTempUnits.y, DegreesF);
-  myScreen.gText(layout.GDTitle.x, layout.GDTitle.y, GDTitle);
-  // myScreen.gText(layout.GDValue.x, layout.GDValue.y, "CLOSED", greenColour);
-  myScreen.gText(layout.BattTitle.x, layout.BattTitle.y, BatteriesTitle);
-  myScreen.gText(layout.BattOutdoorSubtitle.x, layout.BattOutdoorSubtitle.y, OutdoorSubtitle);
-  // myScreen.gText(layout.BattOutdoorValue.x, layout.BattOutdoorValue.y, "3.123");
-  myScreen.gText(layout.BattOutdoorUnits.x, layout.BattOutdoorValue.y, V);
-  myScreen.gText(layout.BattSlimSubtitle.x, layout.BattSlimSubtitle.y, SlimSubtitle);
-  // myScreen.gText(layout.BatSlimValue.x, layout.BatSlimValue.y, "2.999");
-  myScreen.gText(layout.BattSlimUnits.x, layout.BattSlimUnits.y, V);
-  myScreen.gText(layout.BattWorkshopSubtitle.x, layout.BattWorkshopSubtitle.y, WorkshopSubtitle);
-  // myScreen.gText(layout.BattWorkshopValue.x, layout.BattWorkshopValue.y, "3.719");
-  myScreen.gText(layout.BattWorkshopUnits.x, layout.BattWorkshopUnits.y, V);
-  //  myScreen.gText(layout.BattSensor5Subtitle.x, layout.BattSensor5Subtitle.y, Sensor5Subtitle);
-  // myScreen.gText(layout.BattSensor5Value.x, layout.BattSensor5Value.y, "2.888");
-  myScreen.gText(layout.BattSensor5Units.x, layout.BattSensor5Units.y, V);
-  myScreen.gText(layout.TimeAndDateTitle.x, layout.TimeAndDateTitle.y, TimeAndDateTitle);
-  // myScreen.gText(layout.TimeAndDateValue.x, layout.TimeAndDateValue.y, "14-Jun 14:50:00Z");
-
-  // delay(5000);
-  // myScreen.clear();
-  // myScreen.setOrientation(3);
-  /// End of display position test
+  //  DisplayCharacterMap(); // For testing
 
   // Initialze the "previous" strings to empty
   prevOutdoorTemp[0] = 0;
@@ -164,17 +133,53 @@ void setup() {
 
 void loop()
 {
+  int lightSensor;
 
+  lightSensor = analogRead(LIGHT_SENSOR_ADC);
+  Serial.print("Light Sensor: ");
+  Serial.println(lightSensor);
 
-  getAndDisplayWeather();
-  getAndDisplaySlim();
-  getAndDisplayWorkshop();
-  getAndDisplayGarage();
+  switch (lightSensorState) {
+    case LIGHTS_OFF:
+      if (lightSensor > LIGHT_SENSOR_THRESHOLD) {
+        lightSensorState = LIGHTS_TURNED_ON;
+      }
+      else {
+        delay(LIGHTS_OFF_SLEEP_TIME);
+      }
+      break;
 
+    case LIGHTS_TURNED_ON:
+      myScreen.clear();
+      digitalWrite(BACKLIGHT_PIN, 1);
+      displayWelcome();
+      displayTitles();
+      lightSensorState = LIGHTS_ON;
+      break;
 
+    case LIGHTS_ON:
+      if (lightSensor > LIGHT_SENSOR_THRESHOLD) {
+        getAndDisplayWeather();
+        getAndDisplaySlim();
+        getAndDisplayWorkshop();
+        getAndDisplayGarage();
+        Serial.println("Disconnecting. Waiting 30 seconds before next query. ");
+        delay(LIGHTS_ON_SLEEP_TIME);
+      }
+      else
+      {
+        digitalWrite(BACKLIGHT_PIN, 0);
+        lightSensorState = LIGHTS_OFF;
+      }
+      break;
 
-  Serial.println("Disconnecting. Waiting 30 seconds before next query. ");
-  delay(30000);
+    case LIGHTS_TURNED_OFF:   // State not needed
+      break;
+
+    default:
+      break;
+  }
+
 }
 
 void GetThingSpeakChannel(EthernetClient* c, const char* chan, const char* key, int results)
@@ -195,7 +200,6 @@ void getAndDisplayWeather() {
   int i = 0;
   char c;
 
-
   // if you get a connection, report back via serial:
   if (client.connect(server, 80)) {
     Serial.println("connected");
@@ -206,6 +210,7 @@ void getAndDisplayWeather() {
   }
 
   // Make a HTTP request for Weather Station
+  delay(500); ///
   GetThingSpeakChannel(&client, WEATHERSTATION_CHANNEL, WEATHERSTATION_KEY, 1);
 
   // Need to check for connection and wait for characters
@@ -219,28 +224,19 @@ void getAndDisplayWeather() {
     if (c != -1) receiveBuffer[i++] = c;
     if (i > sizeof(receiveBuffer) - 2) break;    // Leave a byte for the null terminator
   }
-  /*
-    // if there are incoming bytes available
-    // from the server, read them and print them:
-    while (client.available()) {
-      char c = client.read();
-      Serial.print(c);
-    }
-
-    // if the server's disconnected, stop the client:
-    if (!client.connected()) {
-      Serial.println("Not connected...");
-    }
-  */
 
   receiveBuffer[i] = '\0';
-  Serial.println("JSON received: ");
+  Serial.print("JSON received size: ");
+  Serial.println(i);
+  Serial.println("JSON buffer: ");
   Serial.println(receiveBuffer);
   Serial.println("");
   client.stop();
 
   JsonObject& root = jsonBuffer.parseObject(receiveBuffer);
   /*
+    "Parsing Program" code generated from ArduinoJson Assistant at arduinojson.org:
+
     JsonObject& channel = root["channel"];
     long channel_id = channel["id"]; // 379945
     const char* channel_name = channel["name"]; // "Weather-Station"
@@ -288,19 +284,11 @@ void getAndDisplayWeather() {
   {
     Serial.println("JSON parse failed.");
     snprintf(outdoorTemp, TEMPSIZE, "  N/A");
+    snprintf(outdoorLux, LUXSIZE, "N/A");
+    snprintf(outdoorRH, RHSIZE, "N/A");
+    snprintf(outdoorP, PSIZE, "N/A");
+    snprintf(outdoorBatt, BATTSIZE, "N/A");
   }
-
-  ///
-  /*
-    //myScreen.clear(); // Default color is blackColour
-    myScreen.setFontSize(1);
-    myScreen.gText(0, 24, "Outdoor Temp: ");
-    myScreen.setFontSize(0);
-    myScreen.gText(8 * 14, 27, prevPrintBuffer, blackColour);
-    myScreen.gText(8 * 14, 27, printBuffer);
-    strncpy(prevPrintBuffer, printBuffer, 32);
-  */
-  ///
 
   myScreen.gText(layout.WeatherTempValue.x, layout.WeatherTempValue.y, prevOutdoorTemp, blackColour);
   myScreen.gText(layout.WeatherTempValue.x, layout.WeatherTempValue.y, outdoorTemp);
@@ -331,7 +319,6 @@ void getAndDisplaySlim() {
   int i = 0;
   char c;
 
-
   // if you get a connection, report back via serial:
   if (client.connect(server, 80)) {
     Serial.println("connected");
@@ -355,19 +342,6 @@ void getAndDisplaySlim() {
     if (c != -1) receiveBuffer[i++] = c;
     if (i > sizeof(receiveBuffer) - 2) break;    // Leave a byte for the null terminator
   }
-  /*
-    // if there are incoming bytes available
-    // from the server, read them and print them:
-    while (client.available()) {
-      char c = client.read();
-      Serial.print(c);
-    }
-
-    // if the server's disconnected, stop the client:
-    if (!client.connected()) {
-      Serial.println("Not connected...");
-    }
-  */
 
   receiveBuffer[i] = '\0';
   Serial.println("JSON received: ");
@@ -377,6 +351,8 @@ void getAndDisplaySlim() {
 
   JsonObject& root = jsonBuffer.parseObject(receiveBuffer);
   /*
+    "Parsing Program" code generated from ArduinoJson Assistant at arduinojson.org:
+
     JsonObject& channel = root["channel"];
     long channel_id = channel["id"]; // 412285
     const char* channel_name = channel["name"]; // "Slim's Temp"
@@ -415,7 +391,8 @@ void getAndDisplaySlim() {
   else
   {
     Serial.println("JSON parse failed.");
-    snprintf(outdoorTemp, TEMPSIZE, "  N/A");
+    snprintf(slimTemp, TEMPSIZE, "N/A");
+    snprintf(slimBatt, BATTSIZE, "N/A");
   }
 
   myScreen.gText(layout.SlimTempValue.x, layout.SlimTempValue.y, prevSlimTemp, blackColour);
@@ -434,7 +411,6 @@ void getAndDisplayWorkshop() {
 
   int i = 0;
   char c;
-
 
   // if you get a connection, report back via serial:
   if (client.connect(server, 80)) {
@@ -459,19 +435,6 @@ void getAndDisplayWorkshop() {
     if (c != -1) receiveBuffer[i++] = c;
     if (i > sizeof(receiveBuffer) - 2) break;    // Leave a byte for the null terminator
   }
-  /*
-    // if there are incoming bytes available
-    // from the server, read them and print them:
-    while (client.available()) {
-      char c = client.read();
-      Serial.print(c);
-    }
-
-    // if the server's disconnected, stop the client:
-    if (!client.connected()) {
-      Serial.println("Not connected...");
-    }
-  */
 
   receiveBuffer[i] = '\0';
   Serial.println("JSON received: ");
@@ -481,6 +444,8 @@ void getAndDisplayWorkshop() {
 
   JsonObject& root = jsonBuffer.parseObject(receiveBuffer);
   /*
+    "Parsing Program" code generated from ArduinoJson Assistant at arduinojson.org:
+
     JsonObject& channel = root["channel"];
     long channel_id = channel["id"]; // 412283
     const char* channel_name = channel["name"]; // "Indoor Temp 4"
@@ -519,7 +484,8 @@ void getAndDisplayWorkshop() {
   else
   {
     Serial.println("JSON parse failed.");
-    snprintf(outdoorTemp, TEMPSIZE, "  N/A");
+    snprintf(workshopTemp, TEMPSIZE, "N/A");
+    snprintf(workshopBatt, BATTSIZE, "N/A");
   }
 
   myScreen.gText(layout.WorkshopTempValue.x, layout.WorkshopTempValue.y, prevWorkshopTemp, blackColour);
@@ -563,19 +529,6 @@ void getAndDisplayGarage() {
     if (c != -1) receiveBuffer[i++] = c;
     if (i > sizeof(receiveBuffer) - 2) break;    // Leave a byte for the null terminator
   }
-  /*
-    // if there are incoming bytes available
-    // from the server, read them and print them:
-    while (client.available()) {
-      char c = client.read();
-      Serial.print(c);
-    }
-
-    // if the server's disconnected, stop the client:
-    if (!client.connected()) {
-      Serial.println("Not connected...");
-    }
-  */
 
   receiveBuffer[i] = '\0';
   Serial.println("JSON received: ");
@@ -585,6 +538,8 @@ void getAndDisplayGarage() {
 
   JsonObject& root = jsonBuffer.parseObject(receiveBuffer);
   /*
+    "Parsing Program" code generated from ArduinoJson Assistant at arduinojson.org:
+
     JsonObject& channel = root["channel"];
     long channel_id = channel["id"]; // 452942
     const char* channel_name = channel["name"]; // "Garage Repeater"
@@ -628,7 +583,7 @@ void getAndDisplayGarage() {
   else
   {
     Serial.println("JSON parse failed.");
-    snprintf(outdoorTemp, TEMPSIZE, "  N/A");
+    snprintf(garageDoor, GDSIZE, "N/A");
   }
 
   myScreen.gText(layout.GDValue.x, layout.GDValue.y, prevGarageDoor, blackColour);
@@ -636,6 +591,37 @@ void getAndDisplayGarage() {
   strncpy(prevGarageDoor, garageDoor, TEMPSIZE);
 
 } // getAndDisplayGarage()
+
+void displayWelcome() {
+//  myScreen.gText(0, 0, "Weather Station", blueColour, blackColour, 1, 1);
+  myScreen.gText(72,  60, "Welcome,", redColour, blackColour, 1, 1); // 240/2 - 12*8/2 = 72
+  myScreen.gText(90, 120, "Andy!", redColour, blackColour, 1, 1);    // 240/2 - 12*5/2 = 90
+  
+  delay(2000);
+}
+
+void displayTitles() {
+  myScreen.setOrientation(2);
+  myScreen.clear();
+  myScreen.gText(layout.WeatherTitle.x, layout.WeatherTitle.y, WeatherTitle);
+  myScreen.gText(layout.WeatherTempUnits.x, layout.WeatherTempUnits.y, DegreesF);
+  myScreen.gText(layout.WeatherLuxUnits.x, layout.WeatherLuxUnits.y, Lux);
+  myScreen.gText(layout.WeatherRHUnits.x, layout.WeatherRHUnits.y, RH);
+  myScreen.gText(layout.WeatherPUnits.x, layout.WeatherPUnits.y, inHG);
+  myScreen.gText(layout.SlimTitle.x, layout.SlimTitle.y, SlimTitle);
+  myScreen.gText(layout.SlimTempUnits.x, layout.SlimTempUnits.y, DegreesF);
+  myScreen.gText(layout.WorkshopTitle.x, layout.WorkshopTitle.y, WorkshopTitle);
+  myScreen.gText(layout.WorkshopTempUnits.x, layout.WorkshopTempUnits.y, DegreesF);
+  myScreen.gText(layout.GDTitle.x, layout.GDTitle.y, GDTitle);
+  myScreen.gText(layout.BattTitle.x, layout.BattTitle.y, BatteriesTitle);
+  myScreen.gText(layout.BattOutdoorSubtitle.x, layout.BattOutdoorSubtitle.y, OutdoorSubtitle);
+  myScreen.gText(layout.BattOutdoorUnits.x, layout.BattOutdoorValue.y, V);
+  myScreen.gText(layout.BattSlimSubtitle.x, layout.BattSlimSubtitle.y, SlimSubtitle);
+  myScreen.gText(layout.BattSlimUnits.x, layout.BattSlimUnits.y, V);
+  myScreen.gText(layout.BattWorkshopSubtitle.x, layout.BattWorkshopSubtitle.y, WorkshopSubtitle);
+  myScreen.gText(layout.BattWorkshopUnits.x, layout.BattWorkshopUnits.y, V);
+  myScreen.gText(layout.TimeAndDateTitle.x, layout.TimeAndDateTitle.y, TimeAndDateTitle);
+}
 
 void DisplayCharacterMap()
 {
