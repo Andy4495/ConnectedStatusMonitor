@@ -124,8 +124,9 @@ Layout::Layout() {
   BattSensor5Units.y =     240;
   TimeAndDateTitle.x =       0;  // Centered = 42
   TimeAndDateTitle.y =     256;
-  TimeAndDateValue.x =      47;  // "14-Jun hh:mm CDT" -> 16 chars * 12 = 192 -> 239 - 192 = 47
-  TimeAndDateValue.y =     274;  // Add slightly more space under title since the display string is long
-                                 // y value could be as low as 272
+  TimeAndDateValue.x =       5;  // "14-Jun hh:mm AM CDT" -> 19 chars * 12 = 228 -> 239 - 228 = 11 to Right Justify
+                                 // Otherewise, use 11/2 = 5 to Center
+  TimeAndDateValue.y =     256;  // If displaying Time and Date header, then use y value of at least 272
+                                 // Otherwise, 256 y-value works for no Time and Date header
 }
 

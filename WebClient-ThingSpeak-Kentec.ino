@@ -25,7 +25,8 @@
 #include <SPI.h>
 #include <Ethernet.h>
 #include <EthernetUdp.h>
-#include <TimeLib.h>
+#include <TimeLib.h>                 // From https://github.com/PaulStoffregen/Time
+#include "dst.h"
 #include "Screen_K35_SPI.h"
 Screen_K35_SPI myScreen;
 #include "ThingSpeakKeys.h"
@@ -39,8 +40,9 @@ const char* server = "api.thingspeak.com";
 
 IPAddress timeServer(96, 126, 100, 203); // pool.nts.org
 
-//const int timeZone = -6;  // Central Standard Time (USA)
-const int timeZone = -5;    // Central Daylight Time (USA)
+// Use Standard Time for Time Zone. DST is corrected when printing.
+const int timeZone = -6;  // Central Standard Time (USA)
+// const int timeZone = -5;    // Central Daylight Time (USA)
 
 time_t t;
 
@@ -72,7 +74,7 @@ Layout layout;
 #define PSIZE     6
 #define GDSIZE    7
 #define BATTSIZE  6
-#define TADSIZE  17
+#define TADSIZE  20
 char outdoorTemp[TEMPSIZE];
 char prevOutdoorTemp[TEMPSIZE];
 char outdoorLux[LUXSIZE];
@@ -231,7 +233,6 @@ void getAndDisplayWeather() {
   }
 
   // Make a HTTP request for Weather Station
-  delay(500); ///
   GetThingSpeakChannel(&client, WEATHERSTATION_CHANNEL, WEATHERSTATION_KEY, 1);
 
   // Need to check for connection and wait for characters
@@ -615,24 +616,44 @@ void getAndDisplayGarage() {
 
 void getAndDisplayTime() {
 
-  int i = 0;
-  char c;
+  int i, yr, mo, da, dst_status = 0;
+
 
   t = now(); // Get the current time
-  snprintf(timeAndDate, TADSIZE, "%2d %s %2d:%2d CDT", day(t), monthShortStr(month(t)), hour(t), minute(t));
+  yr = year(t);
+  mo = month(t);
+  da = day(t);
+  i = (yr - DST_FIRST_YEAR) * 4;
 
-  Serial.print("t: ");
-  Serial.println(t);
-  Serial.print("Month: ");
-  Serial.print(month(t));
-  Serial.print(" - ");
-  Serial.println(monthShortStr(month(t)));
-  Serial.print("Day: ");
-  Serial.println(day(t));
-  Serial.print("Hour: ");
-  Serial.println(hour(t));
-  Serial.print("Minute: ");
-  Serial.println(minute(t));
+  /*  /// Test Code
+    int k, l;
+    //  i = (2029 - DST_FIRST_YEAR) * 4;
+    for (k = 1; k < 13; k++)
+      for (l = 1; l < 32; l++)
+      {
+        if ( (k == dst_info[i + 0] && l >= dst_info[i + 1]) || (k > dst_info[i + 0]) ) // Past start of DST, now check if DST has ended
+            if ( (k == dst_info[i + 2] && l < dst_info[i + 3]) || (k < dst_info[i + 2]) ) dst_status = 1; else dst_status = 0;
+        snprintf(timeAndDate, TADSIZE, "%02d %s %02d:%02d %s",
+                 l,  monthShortStr(k), hour(t), minute(t), (dst_status) ? DAYLIGHT_TZ_STRING : STANDARD_TZ_STRING);
+        Serial.print("Time and Date String: ");
+        Serial.println(timeAndDate);
+      }
+
+    /// */
+
+  if (yr > MAX_DST_YEAR)
+    dst_status = 0;
+  else {
+    if ( (mo == dst_info[i + 0] && da >= dst_info[i + 1]) || (mo > dst_info[i + 0]) ) // Past start of DST, now check if DST has ended
+      if ( (mo == dst_info[i + 2] && da < dst_info[i + 3]) || (mo < dst_info[i + 2]) ) dst_status = 1;
+  }
+
+  if (dst_status == 1) {
+    t = t + SECS_PER_HOUR; // Add back an hour for DST
+  }
+
+  snprintf(timeAndDate, TADSIZE, "%02d %s %2d:%02d %s %s",
+           day(t), monthShortStr(month(t)), hourFormat12(t), minute(t), (isAM()) ? "AM" : "PM", (dst_status) ? DAYLIGHT_TZ_STRING : STANDARD_TZ_STRING);
 
   myScreen.gText(layout.TimeAndDateValue.x, layout.TimeAndDateValue.y, prevTimeAndDate, blackColour);
   myScreen.gText(layout.TimeAndDateValue.x, layout.TimeAndDateValue.y, timeAndDate);
@@ -668,7 +689,8 @@ void displayTitles() {
   myScreen.gText(layout.BattSlimUnits.x, layout.BattSlimUnits.y, V);
   myScreen.gText(layout.BattWorkshopSubtitle.x, layout.BattWorkshopSubtitle.y, WorkshopSubtitle);
   myScreen.gText(layout.BattWorkshopUnits.x, layout.BattWorkshopUnits.y, V);
-  myScreen.gText(layout.TimeAndDateTitle.x, layout.TimeAndDateTitle.y, TimeAndDateTitle);
+  // Don't really need to display "Time and Date" title -- it's pretty obvious
+  // myScreen.gText(layout.TimeAndDateTitle.x, layout.TimeAndDateTitle.y, TimeAndDateTitle);
 }
 
 time_t getNtpTime()
