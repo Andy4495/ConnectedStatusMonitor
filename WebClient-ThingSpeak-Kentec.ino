@@ -9,7 +9,7 @@
   07/10/2018 - A.T. - Initial updates
   08/17/2018 - A.T. - Functional display code for weather station, workshop and slim temps, and garage door status.
   08/19/2018 - A.T. - Add state machine to turn on display depending on state of light sensor on pin A13
-  08/20/2018 - A.T. - Add NTP time to status display
+  08/20/2018 - A.T. - Add NTP time and date to status display
 
 
   *** Future improvements:

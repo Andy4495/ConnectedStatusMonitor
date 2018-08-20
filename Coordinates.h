@@ -126,7 +126,9 @@ Layout::Layout() {
   TimeAndDateTitle.y =     256;
   TimeAndDateValue.x =       5;  // "14-Jun hh:mm AM CDT" -> 19 chars * 12 = 228 -> 239 - 228 = 11 to Right Justify
                                  // Otherewise, use 11/2 = 5 to Center
-  TimeAndDateValue.y =     256;  // If displaying Time and Date header, then use y value of at least 272
-                                 // Otherwise, 256 y-value works for no Time and Date header
+  TimeAndDateValue.y =     304;  // If displaying Time and Date header, then use y value of at least 272
+                                 // With no header, y-value of :
+                                 //                 256 displays time and date in the next line under batteries section
+                                 //                 304 displays time and date on last line of display
 }
 
