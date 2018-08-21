@@ -223,6 +223,8 @@ void getAndDisplayWeather() {
   int i = 0;
   char c;
 
+  uint16_t battColor;
+
   // if you get a connection, report back via serial:
   if (client.connect(server, 80)) {
     Serial.println("connected");
@@ -301,6 +303,9 @@ void getAndDisplayWeather() {
     snprintf(outdoorRH, RHSIZE, "%2i.%i", rh / 10, rh % 10);
     snprintf(outdoorP, PSIZE, "%2i.%02i", p / 100, p % 100);
     snprintf(outdoorBatt, BATTSIZE, "%i.%03i", wBatt / 1000, wBatt % 1000);
+
+    if (wBatt < 2500) battColor = redColour;
+    else battColor = greenColour;
   }
   else
   {
@@ -310,6 +315,7 @@ void getAndDisplayWeather() {
     snprintf(outdoorRH, RHSIZE, "N/A");
     snprintf(outdoorP, PSIZE, "N/A");
     snprintf(outdoorBatt, BATTSIZE, "N/A");
+    battColor = whiteColour;
   }
 
   myScreen.gText(layout.WeatherTempValue.x, layout.WeatherTempValue.y, prevOutdoorTemp, blackColour);
@@ -329,7 +335,7 @@ void getAndDisplayWeather() {
   strncpy(prevOutdoorP, outdoorP, PSIZE);
 
   myScreen.gText(layout.BattOutdoorValue.x, layout.BattOutdoorValue.y, prevOutdoorBatt, blackColour);
-  myScreen.gText(layout.BattOutdoorValue.x, layout.BattOutdoorValue.y, outdoorBatt);
+  myScreen.gText(layout.BattOutdoorValue.x, layout.BattOutdoorValue.y, outdoorBatt, battColor);
   strncpy(prevOutdoorBatt, outdoorBatt, BATTSIZE);
 
 } // getAndDisplayWeather()
@@ -340,6 +346,8 @@ void getAndDisplaySlim() {
 
   int i = 0;
   char c;
+
+  uint16_t tempColor, battColor;
 
   // if you get a connection, report back via serial:
   if (client.connect(server, 80)) {
@@ -407,6 +415,12 @@ void getAndDisplaySlim() {
     Serial.print("Entry ID: ");
     Serial.println(feeds0_entry_id);
 
+    if (Tslim < 800) tempColor = redColour;
+    else tempColor = greenColour;
+
+    if (sBatt < 2400) battColor = redColour;
+    else battColor = greenColour;
+
     snprintf(slimTemp, TEMPSIZE, "%3i.%i", Tslim / 10, Tslim % 10);
     snprintf(slimBatt, BATTSIZE, "%i.%03i", sBatt / 1000, sBatt % 1000);
   }
@@ -415,14 +429,15 @@ void getAndDisplaySlim() {
     Serial.println("JSON parse failed.");
     snprintf(slimTemp, TEMPSIZE, "N/A");
     snprintf(slimBatt, BATTSIZE, "N/A");
+    battColor = whiteColour;
   }
 
   myScreen.gText(layout.SlimTempValue.x, layout.SlimTempValue.y, prevSlimTemp, blackColour);
-  myScreen.gText(layout.SlimTempValue.x, layout.SlimTempValue.y, slimTemp);
+  myScreen.gText(layout.SlimTempValue.x, layout.SlimTempValue.y, slimTemp, tempColor);
   strncpy(prevSlimTemp, slimTemp, TEMPSIZE);
 
   myScreen.gText(layout.BattSlimValue.x, layout.BattSlimValue.y, prevSlimBatt, blackColour);
-  myScreen.gText(layout.BattSlimValue.x, layout.BattSlimValue.y, slimBatt);
+  myScreen.gText(layout.BattSlimValue.x, layout.BattSlimValue.y, slimBatt, battColor);
   strncpy(prevSlimBatt, slimBatt, BATTSIZE);
 
 } // getAndDisplaySlim()
@@ -430,6 +445,8 @@ void getAndDisplaySlim() {
 void getAndDisplayWorkshop() {
 
   DynamicJsonBuffer jsonBuffer(bufferSize);
+
+  uint16_t battColor;
 
   int i = 0;
   char c;
@@ -500,6 +517,9 @@ void getAndDisplayWorkshop() {
     Serial.print("Entry ID: ");
     Serial.println(feeds0_entry_id);
 
+    if (Batt4 < 3500) battColor = redColour;
+    else battColor = greenColour;
+
     snprintf(workshopTemp, TEMPSIZE, "%3i.%i", T4 / 10, T4 % 10);
     snprintf(workshopBatt, BATTSIZE, "%i.%03i", Batt4 / 1000, Batt4 % 1000);
   }
@@ -508,6 +528,7 @@ void getAndDisplayWorkshop() {
     Serial.println("JSON parse failed.");
     snprintf(workshopTemp, TEMPSIZE, "N/A");
     snprintf(workshopBatt, BATTSIZE, "N/A");
+    battColor = whiteColour;
   }
 
   myScreen.gText(layout.WorkshopTempValue.x, layout.WorkshopTempValue.y, prevWorkshopTemp, blackColour);
@@ -515,7 +536,7 @@ void getAndDisplayWorkshop() {
   strncpy(prevWorkshopTemp, workshopTemp, TEMPSIZE);
 
   myScreen.gText(layout.BattWorkshopValue.x, layout.BattWorkshopValue.y, prevWorkshopBatt, blackColour);
-  myScreen.gText(layout.BattWorkshopValue.x, layout.BattWorkshopValue.y, workshopBatt);
+  myScreen.gText(layout.BattWorkshopValue.x, layout.BattWorkshopValue.y, workshopBatt, battColor);
   strncpy(prevWorkshopBatt, workshopBatt, BATTSIZE);
 
 } // getAndDisplayWorkshop()
@@ -523,6 +544,8 @@ void getAndDisplayWorkshop() {
 void getAndDisplayGarage() {
 
   DynamicJsonBuffer jsonBuffer(bufferSize);
+
+  uint16_t doorColor;
 
   int i = 0;
   char c;
@@ -597,19 +620,22 @@ void getAndDisplayGarage() {
 
     if (door > 45) {
       snprintf(garageDoor, GDSIZE, "OPEN");
+      doorColor = redColour;
     }
     else {
       snprintf(garageDoor, GDSIZE, "Closed");
+      doorColor = greenColour;
     }
   }
   else
   {
     Serial.println("JSON parse failed.");
     snprintf(garageDoor, GDSIZE, "N/A");
+    doorColor = whiteColour;
   }
 
   myScreen.gText(layout.GDValue.x, layout.GDValue.y, prevGarageDoor, blackColour);
-  myScreen.gText(layout.GDValue.x, layout.GDValue.y, garageDoor);
+  myScreen.gText(layout.GDValue.x, layout.GDValue.y, garageDoor, doorColor);
   strncpy(prevGarageDoor, garageDoor, TEMPSIZE);
 
 } // getAndDisplayGarage()

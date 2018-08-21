@@ -81,49 +81,49 @@ Layout::Layout() {
   WeatherPUnits.x =        191;
   WeatherPUnits.y =         64;
   SlimTitle.x =              0;  // Centered = 96
-  SlimTitle.y =             80;
+  SlimTitle.y =             96;  // Use y-value of 80 to put title on separate line
   SlimTempValue.x =        143;  // "100.1 " -> 6 chars * 12 = 72 -> 215 - 72 = 143
   SlimTempValue.y =         96;
   SlimTempUnits.x =        215;
   SlimTempUnits.y =         96;
   WorkshopTitle.x =          0;  // Centered = 72
-  WorkshopTitle.y =        112;
+  WorkshopTitle.y =        128;  // Use y-value of 112 to put title on separate line
   WorkshopTempValue.x =    143;  // "100.1 " -> 6 chars * 12 = 72 -> 215 - 72 = 143
   WorkshopTempValue.y =    128;
   WorkshopTempUnits.x =    215;
   WorkshopTempUnits.y =    128;
   GDTitle.x =                0;  // Centered = 54
-  GDTitle.y =              144;
+  GDTitle.y =              160;  // Use y-value of 144 to put title on separate line
   GDValue.x =              167;  // "Closed" -> 6 chars * 12 = 72 -> 239 - 72 = 167
   GDValue.y =              160;
   BattTitle.x =              0;  // Centered = 66
-  BattTitle.y =            176;
+  BattTitle.y =            192;
   BattOutdoorSubtitle.x =   24; 
-  BattOutdoorSubtitle.y =  192;
+  BattOutdoorSubtitle.y =  208;
   BattOutdoorValue.x =     155;  // "3.123 " -> 6 chars * 12 = 72 -> 227 - 72 = 155
-  BattOutdoorValue.y =     192;
+  BattOutdoorValue.y =     208;
   BattOutdoorUnits.x =     227;
-  BattOutdoorUnits.y =     192;
+  BattOutdoorUnits.y =     208;
   BattSlimSubtitle.x =      24;
-  BattSlimSubtitle.y =     208;
+  BattSlimSubtitle.y =     224;
   BattSlimValue.x =        155;  // "3.123 " -> 6 chars * 12 = 72 -> 227 - 72 = 155
-  BattSlimValue.y =        208;
+  BattSlimValue.y =        224;
   BattSlimUnits.x =        227;
-  BattSlimUnits.y =        208;
+  BattSlimUnits.y =        224;
   BattWorkshopSubtitle.x =  24;
-  BattWorkshopSubtitle.y = 224;
+  BattWorkshopSubtitle.y = 240;
   BattWorkshopValue.x =    155;  // "3.123 " -> 6 chars * 12 = 72 -> 227 - 72 = 155
-  BattWorkshopValue.y =    224;
+  BattWorkshopValue.y =    240;
   BattWorkshopUnits.x =    227;
-  BattWorkshopUnits.y =    224;
+  BattWorkshopUnits.y =    240;
   BattSensor5Subtitle.x =   24;
-  BattSensor5Subtitle.y =  240;
+  BattSensor5Subtitle.y =  256;
   BattSensor5Value.x =     155;  // "3.123 " -> 6 chars * 12 = 72 -> 227 - 72 = 155
-  BattSensor5Value.y =     240;
+  BattSensor5Value.y =     256;
   BattSensor5Units.x =     227;
-  BattSensor5Units.y =     240;
+  BattSensor5Units.y =     256;
   TimeAndDateTitle.x =       0;  // Centered = 42
-  TimeAndDateTitle.y =     256;
+  TimeAndDateTitle.y =     270;
   TimeAndDateValue.x =       5;  // "14-Jun hh:mm AM CDT" -> 19 chars * 12 = 228 -> 239 - 228 = 11 to Right Justify
                                  // Otherewise, use 11/2 = 5 to Center
   TimeAndDateValue.y =     304;  // If displaying Time and Date header, then use y value of at least 272
