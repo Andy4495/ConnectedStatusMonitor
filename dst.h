@@ -12,9 +12,10 @@
 #define DAYLIGHT_TZ_STRING "CDT"
 #define STANDARD_TZ_STRING "CST"
 
-#define DAYLIGHT_TZ -5
-#define STANDARD_TZ -6
+#define DAYLIGHT_TZ -5    // Central Time (USA)
+#define STANDARD_TZ -6    // Central Time (USA)
 
+// DST changeover dates (USA)
 // Data format: dst starting month, day, dst ending month, day
 const int dst_info[] = {
   3, 11, 11, 4,        // 2018

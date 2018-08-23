@@ -5,24 +5,25 @@
   Designed specifically for use with TM4C129 Connected LaunchPad
   and Kentec Touch Display BoosterPack (SPI)
   Initial web connection code based on "Web client" example sketch by David A. Mellis.
+  NTP functions are from the Arduino Time library 
 
   07/10/2018 - A.T. - Initial updates
   08/17/2018 - A.T. - Functional display code for weather station, workshop and slim temps, and garage door status.
   08/19/2018 - A.T. - Add state machine to turn on display depending on state of light sensor on pin A13
   08/20/2018 - A.T. - Add NTP time and date to status display
   08/22/2018 - A.T. - Add automatic DST support. Other display cleanup.
+  08/23/2018 - A.T. - Fix DST to switch at 2:00 AM (instead of midnight)
 
 
   *** Future improvements:
     Color a sensor value (or the label) yellow or red if an update has not been received for more than X minutes
     Add a pixel to y-coordinates to allow for hanging comma space (otherwise comma touches next line)
-    All values should be right-justified
     Update lux string to include commas
     Have pressure indicate increasing or decreasing since last measurement (or same or if last measure was N/A)
     Deal with JSON parse failure -- maybe just display last good value (i.e., no display indication of bad JSON)
 
 */
-#include <ArduinoJson.h>
+#include <ArduinoJson.h>             // From https://arduinojson.org/
 #include <SPI.h>
 #include <Ethernet.h>
 #include <EthernetUdp.h>
@@ -30,6 +31,10 @@
 #include "dst.h"
 #include "Screen_K35_SPI.h"
 Screen_K35_SPI myScreen;
+// ThingSpeakKeys.h is not included in the code distribution, since it contains private key info
+// This file should #define the following:
+// #define LAUNCHPAD_MAC {<comma-separated 8-byte MAC address of your ethernet card>}
+// Plus #defines for each of your ThingSpeak feed keys and channel IDs
 #include "ThingSpeakKeys.h"
 #include "Coordinates.h"
 
@@ -43,9 +48,8 @@ const char* server = "api.thingspeak.com";
 IPAddress timeServer(96, 126, 100, 203); // pool.nts.org
 
 // Use Standard Time for Time Zone. DST is corrected when printing.
-#define STANDARD_TIME   -6  // Central Standard Time (USA)
-#define DAYLIGHT_SAVING -5  // Central Daylight Time (USA)
-int timeZone = STANDARD_TIME;   // Use standard time, DST correction is done later
+// Time zones are #defined in dst.h
+int timeZone = STANDARD_TZ;   // Use standard time, DST correction is done later
 
 time_t t;
 
@@ -650,6 +654,7 @@ void getAndDisplayGarage() {
 void getAndDisplayTime() {
 
   int i, yr, mo, da, dst_status;
+  int theHour;
 
   t = now(); // Get the current time
 
@@ -666,35 +671,51 @@ void getAndDisplayTime() {
     yr = year(t);
     mo = month(t);
     da = day(t);
+    theHour = hour(t);
     i = (yr - DST_FIRST_YEAR) * 4;
+    dst_status = 0;               // Assume standard time unless changed below
 
-    if (yr > MAX_DST_YEAR) dst_status = 0;
-    else {
-      if ( (mo == dst_info[i + 0] && da >= dst_info[i + 1]) || (mo > dst_info[i + 0]) ) // Past start of DST, now check if DST has ended
-        if ( (mo == dst_info[i + 2] && da < dst_info[i + 3]) || (mo < dst_info[i + 2]) ) {
+    if (yr <= MAX_DST_YEAR) {
+      if ( (mo == dst_info[i + 0] && da == dst_info[i + 1] && theHour >= 2) ||    // DST changeover at 2:00 AM
+           (mo == dst_info[i + 0] && da > dst_info[i + 1]) ||
+           (mo > dst_info[i + 0]) )
+        // Past start of DST, now check if DST has ended
+        if ( (mo == dst_info[i + 2] && da == dst_info[i + 3] && theHour < 2) ||   // ST changover at 2:00 AM
+             (mo == dst_info[i + 2] && da < dst_info[i + 3]) ||
+             (mo < dst_info[i + 2]) )
+        {
           dst_status = 1;
           t = t + 3600; // Add an hour
         }
-        else {
-          dst_status = 0;
-        }
     }
 
-    /*  /// Test Code
-      int k, l;
-      //  i = (2029 - DST_FIRST_YEAR) * 4;
-      for (k = 1; k < 13; k++)
-        for (l = 1; l < 32; l++)
-        {
-          if ( (k == dst_info[i + 0] && l >= dst_info[i + 1]) || (k > dst_info[i + 0]) ) // Past start of DST, now check if DST has ended
-              if ( (k == dst_info[i + 2] && l < dst_info[i + 3]) || (k < dst_info[i + 2]) ) dst_status = 1; else dst_status = 0;
-          snprintf(timeAndDate, TADSIZE, "%02d %s %02d:%02d %s",
-                   l,  monthShortStr(k), hour(t), minute(t), (dst_status) ? DAYLIGHT_TZ_STRING : STANDARD_TZ_STRING);
-          Serial.print("Time and Date String: ");
-          Serial.println(timeAndDate);
-        }
+    /*    /// Test Code
+        int k, l;
+        //  i = (2029 - DST_FIRST_YEAR) * 4;
+        i = 0;
+        theHour = 1;
+        for (k = 1; k < 13; k++)   // Cycle through months
+          for (l = 1; l < 32; l++) // Cycle through days
+          {
+            dst_status = 0;
+            if ( (k == dst_info[i + 0] && l == dst_info[i + 1] && theHour >= 2) ||    // DST changeover at 2:00 AM
+                 (k == dst_info[i + 0] && l > dst_info[i + 1]) ||
+                 (k > dst_info[i + 0]) )
+              // Past start of DST, now check if DST has ended
+              if ( (k == dst_info[i + 2] && l == dst_info[i + 3] && theHour < 2) ||   // ST changover at 2:00 AM
+                   (k == dst_info[i + 2] && l < dst_info[i + 3]) ||
+                   (k < dst_info[i + 2]) )
+              {
+                dst_status = 1;
+              }
 
-      /// */
+            snprintf(timeAndDate, TADSIZE, "%02d %s %02d:%02d %s",
+                     l,  monthShortStr(k), theHour, minute(t), (dst_status) ? DAYLIGHT_TZ_STRING : STANDARD_TZ_STRING);
+            Serial.print("Time and Date String: ");
+            Serial.println(timeAndDate);
+          }
+
+        /// */
 
     snprintf(timeAndDate, TADSIZE, "%02d %s %2d:%02d %s %s",
              day(t), monthShortStr(month(t)), hourFormat12(t), minute(t), (isAM(t)) ? "AM" : "PM", (dst_status) ? DAYLIGHT_TZ_STRING : STANDARD_TZ_STRING);
