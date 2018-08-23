@@ -15,6 +15,7 @@
 #define DAYLIGHT_TZ -5
 #define STANDARD_TZ -6
 
+// Data format: dst starting month, day, dst ending month, day
 const int dst_info[] = {
   3, 11, 11, 4,        // 2018
   3, 10, 11, 3,        // 2019

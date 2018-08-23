@@ -10,6 +10,7 @@
   08/17/2018 - A.T. - Functional display code for weather station, workshop and slim temps, and garage door status.
   08/19/2018 - A.T. - Add state machine to turn on display depending on state of light sensor on pin A13
   08/20/2018 - A.T. - Add NTP time and date to status display
+  08/22/2018 - A.T. - Add automatic DST support. Other display cleanup.
 
 
   *** Future improvements:
@@ -38,11 +39,13 @@ Screen_K35_SPI myScreen;
 byte mac[] = LAUNCHPAD_MAC; // Defined in ThingSpeakKeys.h
 const char* server = "api.thingspeak.com";
 
+// const char* timeServer = "pool.nts.org";
 IPAddress timeServer(96, 126, 100, 203); // pool.nts.org
 
 // Use Standard Time for Time Zone. DST is corrected when printing.
-const int timeZone = -6;  // Central Standard Time (USA)
-// const int timeZone = -5;    // Central Daylight Time (USA)
+#define STANDARD_TIME   -6  // Central Standard Time (USA)
+#define DAYLIGHT_SAVING -5  // Central Daylight Time (USA)
+int timeZone = STANDARD_TIME;   // Use standard time, DST correction is done later
 
 time_t t;
 
@@ -100,7 +103,7 @@ char prevTimeAndDate[TADSIZE];
 
 #define LIGHT_SENSOR_PIN           42
 #define LIGHT_SENSOR_ADC          A13
-#define LIGHT_SENSOR_THRESHOLD   2000
+#define LIGHT_SENSOR_THRESHOLD   2000    // Based on 10K resistor and cheap photoresistor voltage divider and 12-bit ADC (4096 max value)
 #define LIGHTS_ON_SLEEP_TIME    30000
 #define LIGHTS_OFF_SLEEP_TIME    5000
 #define BACKLIGHT_PIN              40
@@ -149,7 +152,7 @@ void setup() {
   prevTimeAndDate[0] = 0;
 
   Udp.begin(localPort);
-  Serial.println("Waiting for sync with NTP...");
+  Serial.println("Setting up NTP...");
   setSyncProvider(getNtpTime);
 }
 
@@ -167,6 +170,7 @@ void loop()
         lightSensorState = LIGHTS_TURNED_ON;
       }
       else {
+        digitalWrite(BACKLIGHT_PIN, 0);
         delay(LIGHTS_OFF_SLEEP_TIME);
       }
       break;
@@ -191,15 +195,18 @@ void loop()
       }
       else
       {
-        digitalWrite(BACKLIGHT_PIN, 0);
         lightSensorState = LIGHTS_OFF;
       }
       break;
 
     case LIGHTS_TURNED_OFF:   // State not needed
+      Serial.println("Invalid State! Changing state to LIGHTS_OFF.");
+      lightSensorState = LIGHTS_OFF;
       break;
 
-    default:
+    default:  // Should never get here
+      Serial.println("Reached 'default' case in switch statement! Changing state to LIGHTS_OFF.");
+      lightSensorState = LIGHTS_OFF;
       break;
   }
 
@@ -310,11 +317,11 @@ void getAndDisplayWeather() {
   else
   {
     Serial.println("JSON parse failed.");
-    snprintf(outdoorTemp, TEMPSIZE, "  N/A");
-    snprintf(outdoorLux, LUXSIZE, "N/A");
-    snprintf(outdoorRH, RHSIZE, "N/A");
-    snprintf(outdoorP, PSIZE, "N/A");
-    snprintf(outdoorBatt, BATTSIZE, "N/A");
+    snprintf(outdoorTemp, TEMPSIZE,  "  N/A");
+    snprintf(outdoorLux, LUXSIZE, "     N/A");
+    snprintf(outdoorRH, RHSIZE,       " N/A");
+    snprintf(outdoorP, PSIZE,        "  N/A");
+    snprintf(outdoorBatt, BATTSIZE,  "  N/A");
     battColor = whiteColour;
   }
 
@@ -427,8 +434,8 @@ void getAndDisplaySlim() {
   else
   {
     Serial.println("JSON parse failed.");
-    snprintf(slimTemp, TEMPSIZE, "N/A");
-    snprintf(slimBatt, BATTSIZE, "N/A");
+    snprintf(slimTemp, TEMPSIZE, "  N/A");
+    snprintf(slimBatt, BATTSIZE, "  N/A");
     battColor = whiteColour;
   }
 
@@ -526,8 +533,8 @@ void getAndDisplayWorkshop() {
   else
   {
     Serial.println("JSON parse failed.");
-    snprintf(workshopTemp, TEMPSIZE, "N/A");
-    snprintf(workshopBatt, BATTSIZE, "N/A");
+    snprintf(workshopTemp, TEMPSIZE, "  N/A");
+    snprintf(workshopBatt, BATTSIZE, "  N/A");
     battColor = whiteColour;
   }
 
@@ -630,7 +637,7 @@ void getAndDisplayGarage() {
   else
   {
     Serial.println("JSON parse failed.");
-    snprintf(garageDoor, GDSIZE, "N/A");
+    snprintf(garageDoor, GDSIZE, "   N/A");
     doorColor = whiteColour;
   }
 
@@ -642,49 +649,61 @@ void getAndDisplayGarage() {
 
 void getAndDisplayTime() {
 
-  int i, yr, mo, da, dst_status = 0;
-
+  int i, yr, mo, da, dst_status;
 
   t = now(); // Get the current time
-  yr = year(t);
-  mo = month(t);
-  da = day(t);
-  i = (yr - DST_FIRST_YEAR) * 4;
 
-  /*  /// Test Code
-    int k, l;
-    //  i = (2029 - DST_FIRST_YEAR) * 4;
-    for (k = 1; k < 13; k++)
-      for (l = 1; l < 32; l++)
-      {
-        if ( (k == dst_info[i + 0] && l >= dst_info[i + 1]) || (k > dst_info[i + 0]) ) // Past start of DST, now check if DST has ended
-            if ( (k == dst_info[i + 2] && l < dst_info[i + 3]) || (k < dst_info[i + 2]) ) dst_status = 1; else dst_status = 0;
-        snprintf(timeAndDate, TADSIZE, "%02d %s %02d:%02d %s",
-                 l,  monthShortStr(k), hour(t), minute(t), (dst_status) ? DAYLIGHT_TZ_STRING : STANDARD_TZ_STRING);
-        Serial.print("Time and Date String: ");
-        Serial.println(timeAndDate);
-      }
+  Serial.print("timeNotSet = ");
+  Serial.print(timeNotSet);
+  Serial.print(", timeNeedsSync = ");
+  Serial.print(timeNeedsSync);
+  Serial.print(", timeSet = ");
+  Serial.print(timeSet);
+  Serial.print(". timeStatus() = ");
+  Serial.println(timeStatus());
 
-    /// */
+  if (timeStatus() == timeSet) {
+    yr = year(t);
+    mo = month(t);
+    da = day(t);
+    i = (yr - DST_FIRST_YEAR) * 4;
 
-  if (yr > MAX_DST_YEAR)
-    dst_status = 0;
-  else {
-    if ( (mo == dst_info[i + 0] && da >= dst_info[i + 1]) || (mo > dst_info[i + 0]) ) // Past start of DST, now check if DST has ended
-      if ( (mo == dst_info[i + 2] && da < dst_info[i + 3]) || (mo < dst_info[i + 2]) ) dst_status = 1;
-  }
+    if (yr > MAX_DST_YEAR) dst_status = 0;
+    else {
+      if ( (mo == dst_info[i + 0] && da >= dst_info[i + 1]) || (mo > dst_info[i + 0]) ) // Past start of DST, now check if DST has ended
+        if ( (mo == dst_info[i + 2] && da < dst_info[i + 3]) || (mo < dst_info[i + 2]) ) {
+          dst_status = 1;
+          t = t + 3600; // Add an hour
+        }
+        else {
+          dst_status = 0;
+        }
+    }
 
-  if (dst_status == 1) {
-    t = t + SECS_PER_HOUR; // Add back an hour for DST
-  }
+    /*  /// Test Code
+      int k, l;
+      //  i = (2029 - DST_FIRST_YEAR) * 4;
+      for (k = 1; k < 13; k++)
+        for (l = 1; l < 32; l++)
+        {
+          if ( (k == dst_info[i + 0] && l >= dst_info[i + 1]) || (k > dst_info[i + 0]) ) // Past start of DST, now check if DST has ended
+              if ( (k == dst_info[i + 2] && l < dst_info[i + 3]) || (k < dst_info[i + 2]) ) dst_status = 1; else dst_status = 0;
+          snprintf(timeAndDate, TADSIZE, "%02d %s %02d:%02d %s",
+                   l,  monthShortStr(k), hour(t), minute(t), (dst_status) ? DAYLIGHT_TZ_STRING : STANDARD_TZ_STRING);
+          Serial.print("Time and Date String: ");
+          Serial.println(timeAndDate);
+        }
 
-  snprintf(timeAndDate, TADSIZE, "%02d %s %2d:%02d %s %s",
-           day(t), monthShortStr(month(t)), hourFormat12(t), minute(t), (isAM()) ? "AM" : "PM", (dst_status) ? DAYLIGHT_TZ_STRING : STANDARD_TZ_STRING);
+      /// */
 
-  myScreen.gText(layout.TimeAndDateValue.x, layout.TimeAndDateValue.y, prevTimeAndDate, blackColour);
-  myScreen.gText(layout.TimeAndDateValue.x, layout.TimeAndDateValue.y, timeAndDate);
-  strncpy(prevTimeAndDate, timeAndDate, TADSIZE);
+    snprintf(timeAndDate, TADSIZE, "%02d %s %2d:%02d %s %s",
+             day(t), monthShortStr(month(t)), hourFormat12(t), minute(t), (isAM(t)) ? "AM" : "PM", (dst_status) ? DAYLIGHT_TZ_STRING : STANDARD_TZ_STRING);
 
+    myScreen.gText(layout.TimeAndDateValue.x, layout.TimeAndDateValue.y, prevTimeAndDate, blackColour);
+    myScreen.gText(layout.TimeAndDateValue.x, layout.TimeAndDateValue.y, timeAndDate);
+    strncpy(prevTimeAndDate, timeAndDate, TADSIZE);
+  } // if (timeStatus() == timeSet)
+  // Else timeStatus is not valid, so don't change the display
 } // getAndDisplayTime()
 
 void displayWelcome() {
