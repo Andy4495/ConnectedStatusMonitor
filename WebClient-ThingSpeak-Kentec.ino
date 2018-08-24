@@ -5,7 +5,7 @@
   Designed specifically for use with TM4C129 Connected LaunchPad
   and Kentec Touch Display BoosterPack (SPI)
   Initial web connection code based on "Web client" example sketch by David A. Mellis.
-  NTP functions are from the Arduino Time library 
+  NTP functions are from the Arduino Time library
 
   07/10/2018 - A.T. - Initial updates
   08/17/2018 - A.T. - Functional display code for weather station, workshop and slim temps, and garage door status.
@@ -13,6 +13,12 @@
   08/20/2018 - A.T. - Add NTP time and date to status display
   08/22/2018 - A.T. - Add automatic DST support. Other display cleanup.
   08/23/2018 - A.T. - Fix DST to switch at 2:00 AM (instead of midnight)
+  08/24/2018 - A.T. - Minor updates: display time before sensor readings (since it is faster),
+                      use #define for DST effective hour, flash LED1 while display backlight off,
+                      display welcome message in larger (scaled) font,
+                      enable ethernet link and activity LEDs. 
+
+
 
 
   *** Future improvements:
@@ -111,6 +117,9 @@ char prevTimeAndDate[TADSIZE];
 #define LIGHTS_ON_SLEEP_TIME    30000
 #define LIGHTS_OFF_SLEEP_TIME    5000
 #define BACKLIGHT_PIN              40
+#define SLEEPING_STATUS_LED      PN_1    // Flash when display backlight is off to show the unit is active
+
+int  statusLEDstate = 0;
 
 enum {LIGHTS_OFF, LIGHTS_TURNED_ON, LIGHTS_ON, LIGHTS_TURNED_OFF};
 int lightSensorState = LIGHTS_OFF;
@@ -118,6 +127,8 @@ int lightSensorState = LIGHTS_OFF;
 void setup() {
 
   pinMode(LIGHT_SENSOR_PIN, INPUT);
+  pinMode(SLEEPING_STATUS_LED, OUTPUT);
+
 
   // start the serial library:
   Serial.begin(9600);
@@ -130,6 +141,8 @@ void setup() {
   }
   // give the Ethernet shield a second to initialize:
   delay(1000);
+  Ethernet.enableLinkLed();
+  Ethernet.enableActivityLed();
   Serial.print("JsonBuffer size: ");
   Serial.println(bufferSize);
   Serial.println("connecting...");
@@ -174,12 +187,16 @@ void loop()
         lightSensorState = LIGHTS_TURNED_ON;
       }
       else {
+        statusLEDstate = ~statusLEDstate;                     // Flash the LED
+        digitalWrite(SLEEPING_STATUS_LED, statusLEDstate);
         digitalWrite(BACKLIGHT_PIN, 0);
         delay(LIGHTS_OFF_SLEEP_TIME);
       }
       break;
 
     case LIGHTS_TURNED_ON:
+      statusLEDstate = 0;
+      digitalWrite(SLEEPING_STATUS_LED, statusLEDstate);
       myScreen.clear();
       digitalWrite(BACKLIGHT_PIN, 1);
       displayWelcome();
@@ -189,11 +206,11 @@ void loop()
 
     case LIGHTS_ON:
       if (lightSensor > LIGHT_SENSOR_THRESHOLD) {
+        getAndDisplayTime();
         getAndDisplayWeather();
         getAndDisplaySlim();
         getAndDisplayWorkshop();
         getAndDisplayGarage();
-        getAndDisplayTime();
         Serial.println("Disconnecting. Waiting 30 seconds before next query. ");
         delay(LIGHTS_ON_SLEEP_TIME);
       }
@@ -676,11 +693,11 @@ void getAndDisplayTime() {
     dst_status = 0;               // Assume standard time unless changed below
 
     if (yr <= MAX_DST_YEAR) {
-      if ( (mo == dst_info[i + 0] && da == dst_info[i + 1] && theHour >= 2) ||    // DST changeover at 2:00 AM
+      if ( (mo == dst_info[i + 0] && da == dst_info[i + 1] && theHour >= DST_EFFECTIVE_HOUR) ||    // DST changeover time
            (mo == dst_info[i + 0] && da > dst_info[i + 1]) ||
            (mo > dst_info[i + 0]) )
         // Past start of DST, now check if DST has ended
-        if ( (mo == dst_info[i + 2] && da == dst_info[i + 3] && theHour < 2) ||   // ST changover at 2:00 AM
+        if ( (mo == dst_info[i + 2] && da == dst_info[i + 3] && theHour < DST_EFFECTIVE_HOUR) ||   // ST changover time
              (mo == dst_info[i + 2] && da < dst_info[i + 3]) ||
              (mo < dst_info[i + 2]) )
         {
@@ -698,11 +715,11 @@ void getAndDisplayTime() {
           for (l = 1; l < 32; l++) // Cycle through days
           {
             dst_status = 0;
-            if ( (k == dst_info[i + 0] && l == dst_info[i + 1] && theHour >= 2) ||    // DST changeover at 2:00 AM
+            if ( (k == dst_info[i + 0] && l == dst_info[i + 1] && theHour >= DST_EFFECTIVE_HOUR) ||    // DST changeover at 2:00 AM
                  (k == dst_info[i + 0] && l > dst_info[i + 1]) ||
                  (k > dst_info[i + 0]) )
               // Past start of DST, now check if DST has ended
-              if ( (k == dst_info[i + 2] && l == dst_info[i + 3] && theHour < 2) ||   // ST changover at 2:00 AM
+              if ( (k == dst_info[i + 2] && l == dst_info[i + 3] && theHour < DST_EFFECTIVE_HOUR) ||   // ST changover at 2:00 AM
                    (k == dst_info[i + 2] && l < dst_info[i + 3]) ||
                    (k < dst_info[i + 2]) )
               {
@@ -729,9 +746,10 @@ void getAndDisplayTime() {
 
 void displayWelcome() {
   //  myScreen.gText(0, 0, "Weather Station", blueColour, blackColour, 1, 1);
-  myScreen.gText(72,  60, "Welcome,", redColour, blackColour, 1, 1); // 240/2 - 12*8/2 = 72
-  myScreen.gText(90, 120, "Andy!", redColour, blackColour, 1, 1);    // 240/2 - 12*5/2 = 90
-
+  myScreen.setFontSize(0);  // gText font size multiplier only works with font size 0
+  myScreen.gText(24,  60, "Welcome,", redColour, blackColour, 4, 4); // For font size 2: x = 240/2 - 12*8/2 = 72
+  myScreen.gText(60, 120, "Andy!", redColour, blackColour, 4, 4);    // For font size 2: x = 240/2 - 12*5/2 = 90
+  myScreen.setFontSize(2);
   delay(2000);
 }
 

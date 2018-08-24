@@ -15,6 +15,8 @@
 #define DAYLIGHT_TZ -5    // Central Time (USA)
 #define STANDARD_TZ -6    // Central Time (USA)
 
+#define DST_EFFECTIVE_HOUR 2  // The early morning hour that DST starts or stops
+
 // DST changeover dates (USA)
 // Data format: dst starting month, day, dst ending month, day
 const int dst_info[] = {
