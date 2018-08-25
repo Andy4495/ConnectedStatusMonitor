@@ -17,10 +17,12 @@ While the sketch is written for a specific hardware configuration, it can be use
 Parts of the code are messy and could be improved. However, it does what I want, so they will probably stay as they are. In particular:
 - I tried to come up with a creative solution for defining x/y coordinates for the display items. My solution ended up being a little cumbersome and difficult to maintain if the screen layout needs to change significantly.
 - The DST conversion algorithm is optimized for U.S. time zones. It is not generalized for all time zone/DST cases.
-- The time server IP is hardcoded, instead of using DNS to resolve the address.
 
 ## Light Detector Circuit ##
-This display is located in a windowless workshop, and I only want the display backlight on and the board querying the sensors database when I am in the workshop -- which is essentially any time the room light is on. So I constructed a simple circuit using a 10K resistor and a cheap photo resistor (which probably came from an Arduino starter kit). The 10K and photo resistors are wired in series, with the 10K pulled to Vcc and the photo resistor connected to ground. Analog Pin A13 reads the voltage at the 10K/photo resistor connection (a simple voltage divider). Since it is just checking for a dark room vs. a lighted room, a threshold of half the ADC range is used. 
+This display is located in a windowless workshop, and I only want the display backlight on and the board querying the sensors database when I am in the workshop -- which is essentially any time the room light is on. So I constructed a simple circuit using a 10K resistor and a cheap photo resistor (which probably came from an Arduino starter kit). The 10K and photo resistors are wired in series, with the 10K pulled to Vcc and the photo resistor connected to ground. Analog Pin A13 reads the voltage at the 10K/photo resistor connection (a simple voltage divider). Since it is just checking for a dark room vs. a lighted room, a threshold of half the ADC range is used.
+
+## Ethernet Status LEDs ##
+The Connected LaunchPad supports Ethernet Link (LED4) and Activity (LED3) status indicators. However, I find these LEDs are bright and distracting. So the sketch disables them by default. If you want to enable them, hold down PUSH1 (labeled "USR_SW1" on the board's silkscreen) during reset.
 
 ## External Libraries ##
 * [ArduinoJson][3]

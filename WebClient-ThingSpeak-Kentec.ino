@@ -16,7 +16,9 @@
   08/24/2018 - A.T. - Minor updates: display time before sensor readings (since it is faster),
                       use #define for DST effective hour, flash LED1 while display backlight off,
                       display welcome message in larger (scaled) font,
-                      enable ethernet link and activity LEDs. 
+                      enable ethernet link and activity LEDs.
+  08/24/2018 - A.T. - Ethernet LEDs disabled by default, turned on with PUSH1 at reset.
+                      Use "pool.nts.org" instead of specific IP for NTS server.
 
 
 
@@ -50,8 +52,8 @@ Screen_K35_SPI myScreen;
 byte mac[] = LAUNCHPAD_MAC; // Defined in ThingSpeakKeys.h
 const char* server = "api.thingspeak.com";
 
-// const char* timeServer = "pool.nts.org";
-IPAddress timeServer(96, 126, 100, 203); // pool.nts.org
+const char* timeServer = "time.nist.gov";  // Automatically resolves to nearest active server
+// IPAddress timeServer(132.163.97.1); // time.nist.gov
 
 // Use Standard Time for Time Zone. DST is corrected when printing.
 // Time zones are #defined in dst.h
@@ -128,6 +130,7 @@ void setup() {
 
   pinMode(LIGHT_SENSOR_PIN, INPUT);
   pinMode(SLEEPING_STATUS_LED, OUTPUT);
+  pinMode(PUSH1, INPUT_PULLUP);
 
 
   // start the serial library:
@@ -141,8 +144,21 @@ void setup() {
   }
   // give the Ethernet shield a second to initialize:
   delay(1000);
-  Ethernet.enableLinkLed();
-  Ethernet.enableActivityLed();
+
+  // Turn on Ethernet status LEDs if PUSH1 is pressed at reboot
+  // Otherwise, they default to off.
+  if (digitalRead(PUSH1) == LOW) {
+    Ethernet.enableLinkLed();
+    Ethernet.enableActivityLed();
+    Serial.println("Ethernet LINK and ACTIVITY LEDs enabled.");
+  }
+  else {
+    Serial.println("Ethernet status LEDs disabled.");
+    // Following code can be used to turn of Ethernet status LEDs
+    // GPIODirModeSet(ACTIVITY_LED_BASE, ACTIVITY_LED_PIN, GPIO_DIR_MODE_IN);
+    // GPIODirModeSet(LINK_LED_BASE, LINK_LED_PIN, GPIO_DIR_MODE_IN);
+  }
+
   Serial.print("JsonBuffer size: ");
   Serial.println(bufferSize);
   Serial.println("connecting...");
@@ -802,7 +818,7 @@ time_t getNtpTime()
 }
 
 // send an NTP request to the time server at the given address
-void sendNTPpacket(IPAddress &address)
+void sendNTPpacket(const char* address)
 {
   // set all bytes in the buffer to 0
   memset(packetBuffer, 0, NTP_PACKET_SIZE);
