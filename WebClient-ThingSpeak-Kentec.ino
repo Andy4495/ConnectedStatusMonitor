@@ -18,7 +18,7 @@
                       display welcome message in larger (scaled) font,
                       enable ethernet link and activity LEDs.
   08/24/2018 - A.T. - Ethernet LEDs disabled by default, turned on with PUSH1 at reset.
-                      Use "pool.nts.org" instead of specific IP for NTS server.
+                      Use "time.nist.gov" instead of specific IP for time server.
 
 
 
