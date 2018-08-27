@@ -474,6 +474,7 @@ void getAndDisplaySlim() {
     snprintf(slimTemp, TEMPSIZE, "  N/A");
     snprintf(slimBatt, BATTSIZE, "  N/A");
     battColor = whiteColour;
+    tempColor = whiteColour;
   }
 
   myScreen.gText(layout.SlimTempValue.x, layout.SlimTempValue.y, prevSlimTemp, blackColour);
