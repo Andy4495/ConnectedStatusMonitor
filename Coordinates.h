@@ -17,9 +17,12 @@ struct Layout {
   Coord SlimTitle;
   Coord SlimTempValue;
   Coord SlimTempUnits;
-  Coord WorkshopTitle;
-  Coord WorkshopTempValue;
-  Coord WorkshopTempUnits;
+  Coord Sensor5Title;
+  Coord Sensor5TempValue;
+  Coord Sensor5TempUnits;
+  Coord PondTitle;
+  Coord PondTempValue;
+  Coord PondTempUnits;
   Coord GDTitle;
   Coord GDValue;
   Coord BattTitle;
@@ -29,9 +32,9 @@ struct Layout {
   Coord BattSlimSubtitle;
   Coord BattSlimValue;
   Coord BattSlimUnits;
-  Coord BattWorkshopSubtitle;
-  Coord BattWorkshopValue;
-  Coord BattWorkshopUnits;
+  Coord BattPondSubtitle;
+  Coord BattPondValue;
+  Coord BattPondUnits;
   Coord BattSensor5Subtitle;
   Coord BattSensor5Value;
   Coord BattSensor5Units;
@@ -41,7 +44,8 @@ struct Layout {
 
 const char WeatherTitle[] = "Weather";
 const char SlimTitle[] = "Slim";
-const char WorkshopTitle[] = "Workshop";
+const char Sensor5Title[] = "Gargoyle";
+const char PondTitle[] = "Pond";
 const char GDTitle[] = "Garage Door";
 const char BatteriesTitle[] = "Batteries";
 const char TimeAndDateTitle[] = "Time and Date";
@@ -52,8 +56,8 @@ const char inHG[] = "inHg";
 const char V[] = "V";
 const char OutdoorSubtitle[]  = "Outdoor:";
 const char SlimSubtitle[]     = "Slim:";
-const char WorkshopSubtitle[] = "Workshop:";
-const char Sensor5Subtitle[]  = "Sensor5:";
+const char PondSubtitle[]     = "Pond:";
+const char Sensor5Subtitle[]  = "Gargoyle:";
 
 #define FONT_SIZE_X           12
 #define FONT_SIZE_Y           16
@@ -81,47 +85,53 @@ Layout::Layout() {
   WeatherPUnits.x =        191;
   WeatherPUnits.y =         64;
   SlimTitle.x =              0;  // Centered = 96
-  SlimTitle.y =             96;  // Use y-value of 80 to put title on separate line
+  SlimTitle.y =             88; 
   SlimTempValue.x =        143;  // "100.1 " -> 6 chars * 12 = 72 -> 215 - 72 = 143
-  SlimTempValue.y =         96;
+  SlimTempValue.y =         88;
   SlimTempUnits.x =        215;
-  SlimTempUnits.y =         96;
-  WorkshopTitle.x =          0;  // Centered = 72
-  WorkshopTitle.y =        128;  // Use y-value of 112 to put title on separate line
-  WorkshopTempValue.x =    143;  // "100.1 " -> 6 chars * 12 = 72 -> 215 - 72 = 143
-  WorkshopTempValue.y =    128;
-  WorkshopTempUnits.x =    215;
-  WorkshopTempUnits.y =    128;
+  SlimTempUnits.y =         88;
+  Sensor5Title.x =           0;
+  Sensor5Title.y =         112;
+  Sensor5TempValue.x =     143;
+  Sensor5TempValue.y =     112;
+  Sensor5TempUnits.x =     215;
+  Sensor5TempUnits.y =     112;
+  PondTitle.x =              0;  // Centered = 96
+  PondTitle.y =            136;  
+  PondTempValue.x =        143;  // "100.1 " -> 6 chars * 12 = 72 -> 215 - 72 = 143
+  PondTempValue.y =        136;
+  PondTempUnits.x =        215;
+  PondTempUnits.y =        136;
   GDTitle.x =                0;  // Centered = 54
-  GDTitle.y =              160;  // Use y-value of 144 to put title on separate line
+  GDTitle.y =              160; 
   GDValue.x =              167;  // "Closed" -> 6 chars * 12 = 72 -> 239 - 72 = 167
   GDValue.y =              160;
   BattTitle.x =              0;  // Centered = 66
-  BattTitle.y =            192;
+  BattTitle.y =            184;
   BattOutdoorSubtitle.x =   24; 
-  BattOutdoorSubtitle.y =  208;
+  BattOutdoorSubtitle.y =  200;
   BattOutdoorValue.x =     155;  // "3.123 " -> 6 chars * 12 = 72 -> 227 - 72 = 155
-  BattOutdoorValue.y =     208;
+  BattOutdoorValue.y =     200;
   BattOutdoorUnits.x =     227;
-  BattOutdoorUnits.y =     208;
+  BattOutdoorUnits.y =     200;
   BattSlimSubtitle.x =      24;
-  BattSlimSubtitle.y =     224;
+  BattSlimSubtitle.y =     216;
   BattSlimValue.x =        155;  // "3.123 " -> 6 chars * 12 = 72 -> 227 - 72 = 155
-  BattSlimValue.y =        224;
+  BattSlimValue.y =        216;
   BattSlimUnits.x =        227;
-  BattSlimUnits.y =        224;
-  BattWorkshopSubtitle.x =  24;
-  BattWorkshopSubtitle.y = 240;
-  BattWorkshopValue.x =    155;  // "3.123 " -> 6 chars * 12 = 72 -> 227 - 72 = 155
-  BattWorkshopValue.y =    240;
-  BattWorkshopUnits.x =    227;
-  BattWorkshopUnits.y =    240;
+  BattSlimUnits.y =        216;
+  BattPondSubtitle.x =      24;
+  BattPondSubtitle.y =     248;
+  BattPondValue.x =        155;  // "3.123 " -> 6 chars * 12 = 72 -> 227 - 72 = 155
+  BattPondValue.y =        248;
+  BattPondUnits.x =        227;
+  BattPondUnits.y =        248;
   BattSensor5Subtitle.x =   24;
-  BattSensor5Subtitle.y =  256;
+  BattSensor5Subtitle.y =  232;
   BattSensor5Value.x =     155;  // "3.123 " -> 6 chars * 12 = 72 -> 227 - 72 = 155
-  BattSensor5Value.y =     256;
+  BattSensor5Value.y =     232;
   BattSensor5Units.x =     227;
-  BattSensor5Units.y =     256;
+  BattSensor5Units.y =     232;
   TimeAndDateTitle.x =       0;  // Centered = 42
   TimeAndDateTitle.y =     270;
   TimeAndDateValue.x =       5;  // "14-Jun hh:mm AM CDT" -> 19 chars * 12 = 228 -> 239 - 228 = 11 to Right Justify

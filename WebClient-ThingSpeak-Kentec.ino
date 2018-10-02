@@ -19,6 +19,7 @@
                       enable ethernet link and activity LEDs.
   08/24/2018 - A.T. - Ethernet LEDs disabled by default, turned on with PUSH1 at reset.
                       Use "time.nist.gov" instead of specific IP for time server.
+  10/02/2018 - A.T. - Replace Workshop display with Pond sensor. Update thresholds for value colors.
 
 
 
@@ -100,16 +101,20 @@ char outdoorP[PSIZE];
 char prevOutdoorP[PSIZE];
 char slimTemp[TEMPSIZE];
 char prevSlimTemp[TEMPSIZE];
-char workshopTemp[TEMPSIZE];
-char prevWorkshopTemp[TEMPSIZE];
+char sensor5Temp[TEMPSIZE];
+char prevSensor5Temp[TEMPSIZE];
+char pondTemp[TEMPSIZE];
+char prevPondTemp[TEMPSIZE];
 char garageDoor[GDSIZE];
 char prevGarageDoor[GDSIZE];
 char outdoorBatt[BATTSIZE];
 char prevOutdoorBatt[BATTSIZE];
 char slimBatt[BATTSIZE];
 char prevSlimBatt[BATTSIZE];
-char workshopBatt[BATTSIZE];
-char prevWorkshopBatt[BATTSIZE];
+char sensor5Batt[BATTSIZE];
+char prevSensor5Batt[BATTSIZE];
+char pondBatt[BATTSIZE];
+char prevPondBatt[BATTSIZE];
 char timeAndDate[TADSIZE];
 char prevTimeAndDate[TADSIZE];
 
@@ -135,9 +140,19 @@ void setup() {
 
   // start the serial library:
   Serial.begin(9600);
+
+  myScreen.begin();
+  myScreen.setPenSolid(true);
+  myScreen.setFontSolid(false);
+  myScreen.setFontSize(2);
+  myScreen.setOrientation(2);
+  displayStartup();
+
   // start the Ethernet connection:
   if (Ethernet.begin(mac) == 0) {
     Serial.println("Failed to configure Ethernet using DHCP");
+    myScreen.gText(24, 120, "Failed!", redColour, blackColour);
+    myScreen.gText(24, 160, "Program halted.", redColour, blackColour);
     // no point in carrying on, so do nothing forevermore:
     for (;;)
       ;
@@ -163,12 +178,6 @@ void setup() {
   Serial.println(bufferSize);
   Serial.println("connecting...");
 
-  myScreen.begin();
-  myScreen.setPenSolid(true);
-  myScreen.setFontSolid(false);
-  myScreen.setFontSize(2);
-  myScreen.setOrientation(2);
-
   //  DisplayCharacterMap(); // For testing
 
   // Initialze the "previous" strings to empty
@@ -177,11 +186,11 @@ void setup() {
   prevOutdoorRH[0] = 0;
   prevOutdoorP[0] = 0;
   prevSlimTemp[0] = 0;
-  prevWorkshopTemp[0] = 0;
+  prevPondTemp[0] = 0;
   prevGarageDoor[0] = 0;
   prevOutdoorBatt[0] = 0;
   prevSlimBatt[0] = 0;
-  prevWorkshopBatt[0] = 0;
+  prevPondBatt[0] = 0;
   prevTimeAndDate[0] = 0;
 
   Udp.begin(localPort);
@@ -225,7 +234,8 @@ void loop()
         getAndDisplayTime();
         getAndDisplayWeather();
         getAndDisplaySlim();
-        getAndDisplayWorkshop();
+        getAndDisplaySensor5();
+        getAndDisplayPond();
         getAndDisplayGarage();
         Serial.println("Disconnecting. Waiting 30 seconds before next query. ");
         delay(LIGHTS_ON_SLEEP_TIME);
@@ -487,14 +497,14 @@ void getAndDisplaySlim() {
 
 } // getAndDisplaySlim()
 
-void getAndDisplayWorkshop() {
+void getAndDisplaySensor5() {
 
   DynamicJsonBuffer jsonBuffer(bufferSize);
 
-  uint16_t battColor;
-
   int i = 0;
   char c;
+
+  uint16_t tempColor, battColor;
 
   // if you get a connection, report back via serial:
   if (client.connect(server, 80)) {
@@ -505,8 +515,8 @@ void getAndDisplayWorkshop() {
     Serial.println("connection failed");
   }
 
-  // Make a HTTP request for TEMP4 sensor
-  GetThingSpeakChannel(&client, TEMP4_CHANNEL, TEMP4_KEY, 1);
+  // Make a HTTP request for Slim's sensor
+  GetThingSpeakChannel(&client, TEMP5_CHANNEL, TEMP5_KEY, 1);
 
   // Need to check for connection and wait for characters
   // Need to timeout after some time, but not too soon before receiving response
@@ -531,9 +541,9 @@ void getAndDisplayWorkshop() {
     "Parsing Program" code generated from ArduinoJson Assistant at arduinojson.org:
 
     JsonObject& channel = root["channel"];
-    long channel_id = channel["id"]; // 412283
-    const char* channel_name = channel["name"]; // "Indoor Temp 4"
-    const char* channel_description = channel["description"]; // "Indoor Temp Sensor #4 - Workshop"
+    long channel_id = channel["id"]; // 412284
+    const char* channel_name = channel["name"]; // "Indoor Temp 5 - Gargoyle"
+    const char* channel_description = channel["description"]; // "Indoor Temp Sensor #5 - Gargoyle"
     const char* channel_latitude = channel["latitude"]; // "0.0"
     const char* channel_longitude = channel["longitude"]; // "0.0"
     const char* channel_field1 = channel["field1"]; // "Temp"
@@ -542,9 +552,9 @@ void getAndDisplayWorkshop() {
     const char* channel_field4 = channel["field4"]; // "Millis"
     const char* channel_field5 = channel["field5"]; // "RSSI"
     const char* channel_field6 = channel["field6"]; // "LQI"
-    const char* channel_created_at = channel["created_at"]; // "2018-01-26T17:17:57Z"
-    const char* channel_updated_at = channel["updated_at"]; // "2018-08-17T16:33:06Z"
-    long channel_last_entry_id = channel["last_entry_id"]; // 195048
+    const char* channel_created_at = channel["created_at"]; // "2018-01-26T17:18:49Z"
+    const char* channel_updated_at = channel["updated_at"]; // "2018-09-18T08:44:13Z"
+    long channel_last_entry_id = channel["last_entry_id"]; // 243115
   */
 
   if (root.success()) {
@@ -553,8 +563,8 @@ void getAndDisplayWorkshop() {
     const char* feeds0_created_at = feeds0["created_at"]; // "2018-06-10T22:26:23Z"
     long feeds0_entry_id = feeds0["entry_id"]; // 90649
 
-    long T4 = strtol(feeds0["field1"], NULL, 10);
-    long Batt4 = strtol(feeds0["field2"], NULL, 10);
+    long T5 = strtol(feeds0["field1"], NULL, 10);
+    long B5 = strtol(feeds0["field2"], NULL, 10);
 
     Serial.println("Parsed JSON: ");
     Serial.print("Created at: ");
@@ -562,29 +572,132 @@ void getAndDisplayWorkshop() {
     Serial.print("Entry ID: ");
     Serial.println(feeds0_entry_id);
 
-    if (Batt4 < 3500) battColor = redColour;
+    if (T5 > 850) tempColor = redColour;
+    else tempColor = greenColour;
+
+    if (B5 < 2400) battColor = redColour;
     else battColor = greenColour;
 
-    snprintf(workshopTemp, TEMPSIZE, "%3i.%i", T4 / 10, T4 % 10);
-    snprintf(workshopBatt, BATTSIZE, "%i.%03i", Batt4 / 1000, Batt4 % 1000);
+    snprintf(sensor5Temp, TEMPSIZE, "%3i.%i", T5 / 10, T5 % 10);
+    snprintf(sensor5Batt, BATTSIZE, "%i.%03i", B5 / 1000, B5 % 1000);
   }
   else
   {
     Serial.println("JSON parse failed.");
-    snprintf(workshopTemp, TEMPSIZE, "  N/A");
-    snprintf(workshopBatt, BATTSIZE, "  N/A");
+    snprintf(sensor5Temp, TEMPSIZE, "  N/A");
+    snprintf(sensor5Batt, BATTSIZE, "  N/A");
+    battColor = whiteColour;
+    tempColor = whiteColour;
+  }
+
+  myScreen.gText(layout.Sensor5TempValue.x, layout.Sensor5TempValue.y, prevSensor5Temp, blackColour);
+  myScreen.gText(layout.Sensor5TempValue.x, layout.Sensor5TempValue.y, sensor5Temp, tempColor);
+  strncpy(prevSensor5Temp, sensor5Temp, TEMPSIZE);
+
+  myScreen.gText(layout.BattSensor5Value.x, layout.BattSensor5Value.y, prevSensor5Batt, blackColour);
+  myScreen.gText(layout.BattSensor5Value.x, layout.BattSensor5Value.y, sensor5Batt, battColor);
+  strncpy(prevSensor5Batt, sensor5Batt, BATTSIZE);
+
+} // getAndDisplaySensor5()
+
+void getAndDisplayPond() {
+
+  DynamicJsonBuffer jsonBuffer(bufferSize);
+
+  uint16_t battColor;
+
+  int i = 0;
+  char c;
+
+  // if you get a connection, report back via serial:
+  if (client.connect(server, 80)) {
+    Serial.println("connected");
+  }
+  else {
+    // if you didn't get a connection to the server:
+    Serial.println("connection failed");
+  }
+
+  // Make a HTTP request for Pond sensor
+  GetThingSpeakChannel(&client, POND_CHANNEL, POND_KEY, 1);
+
+  // Need to check for connection and wait for characters
+  // Need to timeout after some time, but not too soon before receiving response
+  // Initially just use delay(), but replace with improved code using millis()
+  delay(500);
+
+  while (client.connected()) {
+    /// Add a timeout with millis()
+    c = client.read();
+    if (c != -1) receiveBuffer[i++] = c;
+    if (i > sizeof(receiveBuffer) - 2) break;    // Leave a byte for the null terminator
+  }
+
+  receiveBuffer[i] = '\0';
+  Serial.println("JSON received: ");
+  Serial.println(receiveBuffer);
+  Serial.println("");
+  client.stop();
+
+  JsonObject& root = jsonBuffer.parseObject(receiveBuffer);
+  /*
+    "Parsing Program" code generated from ArduinoJson Assistant at arduinojson.org:
+
+    JsonObject& channel = root["channel"];
+    long channel_id = channel["id"]; // 572681
+    const char* channel_name = channel["name"]; // "Pond Sensor"
+    const char* channel_description = channel["description"]; // "Various sensor readings at the pond. "
+    const char* channel_latitude = channel["latitude"]; // "0.0"
+    const char* channel_longitude = channel["longitude"]; // "0.0"
+    const char* channel_field1 = channel["field1"]; // "Air Temp"
+    const char* channel_field2 = channel["field2"]; // "Submerged Temp"
+    const char* channel_field3 = channel["field3"]; // "Battery mV"
+    const char* channel_field4 = channel["field4"]; // "Millis"
+    const char* channel_field5 = channel["field5"]; // "Pump Status"
+    const char* channel_field6 = channel["field6"]; // "Aerator Status"
+    const char* channel_created_at = channel["created_at"]; // "2018-09-09T19:02:08Z"
+    const char* channel_updated_at = channel["updated_at"]; // "2018-09-09T23:27:23Z"
+    int channel_last_entry_id = channel["last_entry_id"]; // 77
+  */
+
+  if (root.success()) {
+
+    JsonObject& feeds0 = root["feeds"][0];
+    const char* feeds0_created_at = feeds0["created_at"]; // "2018-06-10T22:26:23Z"
+    long feeds0_entry_id = feeds0["entry_id"]; // 90649
+
+    long pondWaterT = strtol(feeds0["field2"], NULL, 10);
+    long pondmV = strtol(feeds0["field3"], NULL, 10);
+
+    Serial.println("Parsed JSON: ");
+    Serial.print("Created at: ");
+    Serial.println(feeds0_created_at);
+    Serial.print("Entry ID: ");
+    Serial.println(feeds0_entry_id);
+
+    if (pondmV < 3500) battColor = redColour;
+    else battColor = greenColour;
+
+    snprintf(pondTemp, TEMPSIZE, "%3i.%i", pondWaterT / 10, pondWaterT % 10);
+    snprintf(pondBatt, BATTSIZE, "%i.%03i", pondmV / 1000, pondmV % 1000);
+  }
+  else
+  {
+    Serial.println("JSON parse failed.");
+    snprintf(pondTemp, TEMPSIZE, "  N/A");
+    snprintf(pondBatt, BATTSIZE, "  N/A");
     battColor = whiteColour;
   }
 
-  myScreen.gText(layout.WorkshopTempValue.x, layout.WorkshopTempValue.y, prevWorkshopTemp, blackColour);
-  myScreen.gText(layout.WorkshopTempValue.x, layout.WorkshopTempValue.y, workshopTemp);
-  strncpy(prevWorkshopTemp, workshopTemp, TEMPSIZE);
+  myScreen.gText(layout.PondTempValue.x, layout.PondTempValue.y, prevPondTemp, blackColour);
+  myScreen.gText(layout.PondTempValue.x, layout.PondTempValue.y, pondTemp);
+  strncpy(prevPondTemp, pondTemp, TEMPSIZE);
 
-  myScreen.gText(layout.BattWorkshopValue.x, layout.BattWorkshopValue.y, prevWorkshopBatt, blackColour);
-  myScreen.gText(layout.BattWorkshopValue.x, layout.BattWorkshopValue.y, workshopBatt, battColor);
-  strncpy(prevWorkshopBatt, workshopBatt, BATTSIZE);
+  myScreen.gText(layout.BattPondValue.x, layout.BattPondValue.y, prevPondBatt, blackColour);
+  myScreen.gText(layout.BattPondValue.x, layout.BattPondValue.y, pondBatt, battColor);
+  strncpy(prevPondBatt, pondBatt, BATTSIZE);
 
-} // getAndDisplayWorkshop()
+} // getAndDisplayPond()
 
 void getAndDisplayGarage() {
 
@@ -605,7 +718,7 @@ void getAndDisplayGarage() {
     Serial.println("connection failed");
   }
 
-  // Make a HTTP request for TEMP4 sensor
+  // Make a HTTP request for Garage sensor
   GetThingSpeakChannel(&client, REPEATER_CHANNEL, REPEATER_KEY, 1);
 
   // Need to check for connection and wait for characters
@@ -664,7 +777,7 @@ void getAndDisplayGarage() {
     Serial.println(feeds0_entry_id);
 
     if (door > 45) {
-      snprintf(garageDoor, GDSIZE, "OPEN");
+      snprintf(garageDoor, GDSIZE, "  OPEN");
       doorColor = redColour;
     }
     else {
@@ -761,6 +874,12 @@ void getAndDisplayTime() {
   // Else timeStatus is not valid, so don't change the display
 } // getAndDisplayTime()
 
+void displayStartup() {
+  myScreen.gText(0, 0, "Weather Station", yellowColour, blackColour, 1, 1);
+  myScreen.gText(24,  60, "Initializing", redColour, blackColour);
+  myScreen.gText(48,  80, "Ethernet . . .", redColour, blackColour);
+}
+
 void displayWelcome() {
   //  myScreen.gText(0, 0, "Weather Station", blueColour, blackColour, 1, 1);
   myScreen.setFontSize(0);  // gText font size multiplier only works with font size 0
@@ -780,16 +899,20 @@ void displayTitles() {
   myScreen.gText(layout.WeatherPUnits.x, layout.WeatherPUnits.y, inHG);
   myScreen.gText(layout.SlimTitle.x, layout.SlimTitle.y, SlimTitle);
   myScreen.gText(layout.SlimTempUnits.x, layout.SlimTempUnits.y, DegreesF);
-  myScreen.gText(layout.WorkshopTitle.x, layout.WorkshopTitle.y, WorkshopTitle);
-  myScreen.gText(layout.WorkshopTempUnits.x, layout.WorkshopTempUnits.y, DegreesF);
+  myScreen.gText(layout.Sensor5Title.x, layout.Sensor5Title.y, Sensor5Title);
+  myScreen.gText(layout.Sensor5TempUnits.x, layout.Sensor5TempUnits.y, DegreesF);
+  myScreen.gText(layout.PondTitle.x, layout.PondTitle.y, PondTitle);
+  myScreen.gText(layout.PondTempUnits.x, layout.PondTempUnits.y, DegreesF);
   myScreen.gText(layout.GDTitle.x, layout.GDTitle.y, GDTitle);
   myScreen.gText(layout.BattTitle.x, layout.BattTitle.y, BatteriesTitle);
   myScreen.gText(layout.BattOutdoorSubtitle.x, layout.BattOutdoorSubtitle.y, OutdoorSubtitle);
   myScreen.gText(layout.BattOutdoorUnits.x, layout.BattOutdoorValue.y, V);
   myScreen.gText(layout.BattSlimSubtitle.x, layout.BattSlimSubtitle.y, SlimSubtitle);
   myScreen.gText(layout.BattSlimUnits.x, layout.BattSlimUnits.y, V);
-  myScreen.gText(layout.BattWorkshopSubtitle.x, layout.BattWorkshopSubtitle.y, WorkshopSubtitle);
-  myScreen.gText(layout.BattWorkshopUnits.x, layout.BattWorkshopUnits.y, V);
+  myScreen.gText(layout.BattSensor5Subtitle.x, layout.BattSensor5Subtitle.y, Sensor5Subtitle);
+  myScreen.gText(layout.BattSensor5Units.x, layout.BattSensor5Units.y, V);
+  myScreen.gText(layout.BattPondSubtitle.x, layout.BattPondSubtitle.y, PondSubtitle);
+  myScreen.gText(layout.BattPondUnits.x, layout.BattPondUnits.y, V);
   // Don't really need to display "Time and Date" title -- it's pretty obvious
   // myScreen.gText(layout.TimeAndDateTitle.x, layout.TimeAndDateTitle.y, TimeAndDateTitle);
 }
