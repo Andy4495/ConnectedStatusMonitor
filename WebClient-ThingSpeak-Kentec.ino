@@ -20,6 +20,7 @@
   08/24/2018 - A.T. - Ethernet LEDs disabled by default, turned on with PUSH1 at reset.
                       Use "time.nist.gov" instead of specific IP for time server.
   10/02/2018 - A.T. - Replace Workshop display with Pond sensor. Update thresholds for value colors.
+  10/10/2018 - A.T. - Change pond battery threshold (using 2AAs instead of LiPo). 
 
 
 
@@ -675,7 +676,7 @@ void getAndDisplayPond() {
     Serial.print("Entry ID: ");
     Serial.println(feeds0_entry_id);
 
-    if (pondmV < 3500) battColor = redColour;
+    if (pondmV < 2500) battColor = redColour;
     else battColor = greenColour;
 
     snprintf(pondTemp, TEMPSIZE, "%3i.%i", pondWaterT / 10, pondWaterT % 10);
@@ -877,7 +878,7 @@ void getAndDisplayTime() {
 void displayStartup() {
   myScreen.gText(0, 0, "Weather Station", yellowColour, blackColour, 1, 1);
   myScreen.gText(24,  60, "Initializing", redColour, blackColour);
-  myScreen.gText(48,  80, "Ethernet . . .", redColour, blackColour);
+  myScreen.gText(48,  80, "Ethernet. . .", redColour, blackColour);
 }
 
 void displayWelcome() {
