@@ -20,7 +20,10 @@
   08/24/2018 - A.T. - Ethernet LEDs disabled by default, turned on with PUSH1 at reset.
                       Use "time.nist.gov" instead of specific IP for time server.
   10/02/2018 - A.T. - Replace Workshop display with Pond sensor. Update thresholds for value colors.
-  10/10/2018 - A.T. - Change pond battery threshold (using 2AAs instead of LiPo). 
+  10/10/2018 - A.T. - Change pond battery threshold (using 2AAs instead of LiPo).
+  01/30/2019 - A.T. - Change pond battery threshold (using 3xAAs through a TPS715A33 3.3V regulator).
+                    - Fix display of negative temps.
+                    - Increased time to wait for ThingSpeak response.
 
 
 
@@ -39,6 +42,7 @@
 #include <EthernetUdp.h>
 #include <TimeLib.h>                 // From https://github.com/PaulStoffregen/Time
 #include "dst.h"
+
 #include "Screen_K35_SPI.h"
 Screen_K35_SPI myScreen;
 // ThingSpeakKeys.h is not included in the code distribution, since it contains private key info
@@ -141,6 +145,8 @@ void setup() {
 
   // start the serial library:
   Serial.begin(9600);
+  delay(1000);
+  Serial.println("Starting the Sensor Monitor...");
 
   myScreen.begin();
   myScreen.setPenSolid(true);
@@ -149,15 +155,19 @@ void setup() {
   myScreen.setOrientation(2);
   displayStartup();
 
+
+
   // start the Ethernet connection:
   if (Ethernet.begin(mac) == 0) {
-    Serial.println("Failed to configure Ethernet using DHCP");
+    Serial.println("Failed to configure Ethernet using DHCP.");
     myScreen.gText(24, 120, "Failed!", redColour, blackColour);
     myScreen.gText(24, 160, "Program halted.", redColour, blackColour);
     // no point in carrying on, so do nothing forevermore:
     for (;;)
       ;
   }
+
+  Serial.println("Ethernet initialized...");
   // give the Ethernet shield a second to initialize:
   delay(1000);
 
@@ -177,7 +187,7 @@ void setup() {
 
   Serial.print("JsonBuffer size: ");
   Serial.println(bufferSize);
-  Serial.println("connecting...");
+  Serial.println("Connecting to NTP....");
 
   //  DisplayCharacterMap(); // For testing
 
@@ -295,7 +305,7 @@ void getAndDisplayWeather() {
   // Need to check for connection and wait for characters
   // Need to timeout after some time, but not too soon before receiving response
   // Initially just use delay(), but replace with improved code using millis()
-  delay(500);
+  delay(750);
 
   while (client.connected()) {
     /// Add a timeout with millis()
@@ -353,7 +363,7 @@ void getAndDisplayWeather() {
     Serial.print("Entry ID: ");
     Serial.println(feeds0_entry_id);
 
-    snprintf(outdoorTemp, TEMPSIZE, "%3i.%i", Tf / 10, Tf % 10);
+    snprintf(outdoorTemp, TEMPSIZE, "%3i.%i", Tf / 10, abs(Tf) % 10);
     snprintf(outdoorLux, LUXSIZE, "%8i", lux);
     snprintf(outdoorRH, RHSIZE, "%2i.%i", rh / 10, rh % 10);
     snprintf(outdoorP, PSIZE, "%2i.%02i", p / 100, p % 100);
@@ -419,7 +429,7 @@ void getAndDisplaySlim() {
   // Need to check for connection and wait for characters
   // Need to timeout after some time, but not too soon before receiving response
   // Initially just use delay(), but replace with improved code using millis()
-  delay(500);
+  delay(750);
 
   while (client.connected()) {
     /// Add a timeout with millis()
@@ -476,7 +486,7 @@ void getAndDisplaySlim() {
     if (sBatt < 2400) battColor = redColour;
     else battColor = greenColour;
 
-    snprintf(slimTemp, TEMPSIZE, "%3i.%i", Tslim / 10, Tslim % 10);
+    snprintf(slimTemp, TEMPSIZE, "%3i.%i", Tslim / 10, abs(Tslim) % 10);
     snprintf(slimBatt, BATTSIZE, "%i.%03i", sBatt / 1000, sBatt % 1000);
   }
   else
@@ -522,7 +532,7 @@ void getAndDisplaySensor5() {
   // Need to check for connection and wait for characters
   // Need to timeout after some time, but not too soon before receiving response
   // Initially just use delay(), but replace with improved code using millis()
-  delay(500);
+  delay(750);
 
   while (client.connected()) {
     /// Add a timeout with millis()
@@ -579,7 +589,7 @@ void getAndDisplaySensor5() {
     if (B5 < 2400) battColor = redColour;
     else battColor = greenColour;
 
-    snprintf(sensor5Temp, TEMPSIZE, "%3i.%i", T5 / 10, T5 % 10);
+    snprintf(sensor5Temp, TEMPSIZE, "%3i.%i", T5 / 10, abs(T5) % 10);
     snprintf(sensor5Batt, BATTSIZE, "%i.%03i", B5 / 1000, B5 % 1000);
   }
   else
@@ -625,7 +635,7 @@ void getAndDisplayPond() {
   // Need to check for connection and wait for characters
   // Need to timeout after some time, but not too soon before receiving response
   // Initially just use delay(), but replace with improved code using millis()
-  delay(500);
+  delay(750);
 
   while (client.connected()) {
     /// Add a timeout with millis()
@@ -676,10 +686,10 @@ void getAndDisplayPond() {
     Serial.print("Entry ID: ");
     Serial.println(feeds0_entry_id);
 
-    if (pondmV < 2500) battColor = redColour;
+    if (pondmV < 3100) battColor = redColour;
     else battColor = greenColour;
 
-    snprintf(pondTemp, TEMPSIZE, "%3i.%i", pondWaterT / 10, pondWaterT % 10);
+    snprintf(pondTemp, TEMPSIZE, "%3i.%i", pondWaterT / 10, abs(pondWaterT) % 10);
     snprintf(pondBatt, BATTSIZE, "%i.%03i", pondmV / 1000, pondmV % 1000);
   }
   else
@@ -725,7 +735,7 @@ void getAndDisplayGarage() {
   // Need to check for connection and wait for characters
   // Need to timeout after some time, but not too soon before receiving response
   // Initially just use delay(), but replace with improved code using millis()
-  delay(500);
+  delay(750);
 
   while (client.connected()) {
     /// Add a timeout with millis()
