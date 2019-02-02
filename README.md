@@ -24,6 +24,22 @@ This display is located in a windowless workshop, and I only want the display ba
 ## Ethernet Status LEDs ##
 The Connected LaunchPad supports Ethernet Link (LED4) and Activity (LED3) status indicators. However, I find these LEDs are bright and distracting. So the sketch disables them by default. If you want to enable them, hold down PUSH1 (labeled "USR_SW1" on the board's silkscreen) during reset.
 
+## Kentec Display Library ##
+The [LCD display][2] requires the Screen_K35_SPI library. This library is included in the MSP430 board package with Energia, but not in the Tiva boards package. The MSP430 version of the library requires some minor modifications to work with the TM4C1294 LauchPad. These steps need to be performed any time you upgrade Energia or the Tiva boards package version.
+
+Note that these directions are Windows-specific. Mac and Linux instructions are left as an exercise to the reader.
+
+1. Copy the directory `Kentec_35_SPI` from `<Energia Install Directory>\energia-1.8.7E21\hardware\energia\msp430\libraries` to `~\AppData\Local\Energia15\packages\energia\hardware\tivac\1.0.3\libraries`
+2. In file `LCD_screen_font.h`, add the following to the end of line 48:
+        || defined(__TM4C1294NCPDT__)
+  This enables the large 12x8 font size (font size 3).
+3. In file `Screen_K35_SPI.cpp`, add the following to the end of line 143:
+        || defined(__TM4C1294NCPDT__)
+  This selects the correct SPI port when connecting the Kentec display to "Booster Pack 1" connectors on the Connected LaunchPad.
+4. In file `library.properties`, add the following to the end of line 9:
+        ,tivac
+  This keeps the IDE from complaining about a posssible incompatible library. 
+
 ## External Libraries ##
 * [ArduinoJson][3]
 * [Arduino Time Library][5]
