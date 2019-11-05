@@ -24,6 +24,9 @@
   01/30/2019 - A.T. - Change pond battery threshold (using 3xAAs through a TPS715A33 3.3V regulator).
                     - Fix display of negative temps.
                     - Increased time to wait for ThingSpeak response.
+  11/04/2019 - A.T. - Add Workshop temp display.
+                    - Remove pond battery display (since it is AC powered)
+                    - Add battery level warning for Workshop sensor
 
 
 
@@ -110,6 +113,8 @@ char sensor5Temp[TEMPSIZE];
 char prevSensor5Temp[TEMPSIZE];
 char pondTemp[TEMPSIZE];
 char prevPondTemp[TEMPSIZE];
+char workshopTemp[TEMPSIZE];
+char prevWorkshopTemp[TEMPSIZE];
 char garageDoor[GDSIZE];
 char prevGarageDoor[GDSIZE];
 char outdoorBatt[BATTSIZE];
@@ -118,8 +123,6 @@ char slimBatt[BATTSIZE];
 char prevSlimBatt[BATTSIZE];
 char sensor5Batt[BATTSIZE];
 char prevSensor5Batt[BATTSIZE];
-char pondBatt[BATTSIZE];
-char prevPondBatt[BATTSIZE];
 char timeAndDate[TADSIZE];
 char prevTimeAndDate[TADSIZE];
 
@@ -130,6 +133,7 @@ char prevTimeAndDate[TADSIZE];
 #define LIGHTS_OFF_SLEEP_TIME    5000
 #define BACKLIGHT_PIN              40
 #define SLEEPING_STATUS_LED      PN_1    // Flash when display backlight is off to show the unit is active
+#define LIPO_LO_BATT_LEVEL       3700
 
 int  statusLEDstate = 0;
 
@@ -197,11 +201,11 @@ void setup() {
   prevOutdoorRH[0] = 0;
   prevOutdoorP[0] = 0;
   prevSlimTemp[0] = 0;
+  prevWorkshopTemp[0] = 0;
   prevPondTemp[0] = 0;
   prevGarageDoor[0] = 0;
   prevOutdoorBatt[0] = 0;
   prevSlimBatt[0] = 0;
-  prevPondBatt[0] = 0;
   prevTimeAndDate[0] = 0;
 
   Udp.begin(localPort);
@@ -246,6 +250,7 @@ void loop()
         getAndDisplayWeather();
         getAndDisplaySlim();
         getAndDisplaySensor5();
+        getAndDisplayWorkshop();
         getAndDisplayPond();
         getAndDisplayGarage();
         Serial.println("Disconnecting. Waiting 30 seconds before next query. ");
@@ -586,7 +591,7 @@ void getAndDisplaySensor5() {
     if (T5 > 850) tempColor = redColour;
     else tempColor = greenColour;
 
-    if (B5 < 2400) battColor = redColour;
+    if (B5 < LIPO_LO_BATT_LEVEL) battColor = redColour;
     else battColor = greenColour;
 
     snprintf(sensor5Temp, TEMPSIZE, "%3i.%i", T5 / 10, abs(T5) % 10);
@@ -611,11 +616,85 @@ void getAndDisplaySensor5() {
 
 } // getAndDisplaySensor5()
 
-void getAndDisplayPond() {
+void getAndDisplayWorkshop() {
 
   DynamicJsonBuffer jsonBuffer(bufferSize);
 
+  int i = 0;
+  char c;
+
   uint16_t battColor;
+
+  // if you get a connection, report back via serial:
+  if (client.connect(server, 80)) {
+    Serial.println("connected");
+  }
+  else {
+    // if you didn't get a connection to the server:
+    Serial.println("connection failed");
+  }
+
+  // Make a HTTP request for Slim's sensor
+  GetThingSpeakChannel(&client, TEMP4_CHANNEL, TEMP4_KEY, 1);
+
+  // Need to check for connection and wait for characters
+  // Need to timeout after some time, but not too soon before receiving response
+  // Initially just use delay(), but replace with improved code using millis()
+  delay(750);
+
+  while (client.connected()) {
+    /// Add a timeout with millis()
+    c = client.read();
+    if (c != -1) receiveBuffer[i++] = c;
+    if (i > sizeof(receiveBuffer) - 2) break;    // Leave a byte for the null terminator
+  }
+
+  receiveBuffer[i] = '\0';
+  Serial.println("JSON received: ");
+  Serial.println(receiveBuffer);
+  Serial.println("");
+  client.stop();
+
+  JsonObject& root = jsonBuffer.parseObject(receiveBuffer);
+
+  if (root.success()) {
+
+    JsonObject& feeds0 = root["feeds"][0];
+    const char* feeds0_created_at = feeds0["created_at"]; // "2018-06-10T22:26:23Z"
+    long feeds0_entry_id = feeds0["entry_id"]; // 90649
+
+    long T4 = strtol(feeds0["field1"], NULL, 10);
+    long B4 = strtol(feeds0["field2"], NULL, 10); // Not checking battery level
+
+    Serial.println("Parsed JSON: ");
+    Serial.print("Created at: ");
+    Serial.println(feeds0_created_at);
+    Serial.print("Entry ID: ");
+    Serial.println(feeds0_entry_id);
+
+    if (B4 < LIPO_LO_BATT_LEVEL)
+      battColor = redColour;
+    else
+      battColor = blackColour;
+
+    snprintf(workshopTemp, TEMPSIZE, "%3i.%i", T4 / 10, abs(T4) % 10);
+  }
+  else
+  {
+    Serial.println("JSON parse failed.");
+    snprintf(workshopTemp, TEMPSIZE, "  N/A");
+  }
+
+  myScreen.gText(layout.WorkshopTempValue.x, layout.WorkshopTempValue.y, prevWorkshopTemp, blackColour);
+  myScreen.gText(layout.WorkshopTempValue.x, layout.WorkshopTempValue.y, workshopTemp, whiteColour);
+  myScreen.gText(layout.WorkshopLoBat.x, layout.WorkshopLoBat.y, WorkshopLoBat, battColor);
+  strncpy(prevWorkshopTemp, workshopTemp, TEMPSIZE);
+
+} // getAndDisplayWorkshop()
+
+void getAndDisplayPond() {
+
+  DynamicJsonBuffer jsonBuffer(bufferSize);
 
   int i = 0;
   char c;
@@ -686,27 +765,17 @@ void getAndDisplayPond() {
     Serial.print("Entry ID: ");
     Serial.println(feeds0_entry_id);
 
-    if (pondmV < 3100) battColor = redColour;
-    else battColor = greenColour;
-
     snprintf(pondTemp, TEMPSIZE, "%3i.%i", pondWaterT / 10, abs(pondWaterT) % 10);
-    snprintf(pondBatt, BATTSIZE, "%i.%03i", pondmV / 1000, pondmV % 1000);
   }
   else
   {
     Serial.println("JSON parse failed.");
     snprintf(pondTemp, TEMPSIZE, "  N/A");
-    snprintf(pondBatt, BATTSIZE, "  N/A");
-    battColor = whiteColour;
   }
 
   myScreen.gText(layout.PondTempValue.x, layout.PondTempValue.y, prevPondTemp, blackColour);
   myScreen.gText(layout.PondTempValue.x, layout.PondTempValue.y, pondTemp);
   strncpy(prevPondTemp, pondTemp, TEMPSIZE);
-
-  myScreen.gText(layout.BattPondValue.x, layout.BattPondValue.y, prevPondBatt, blackColour);
-  myScreen.gText(layout.BattPondValue.x, layout.BattPondValue.y, pondBatt, battColor);
-  strncpy(prevPondBatt, pondBatt, BATTSIZE);
 
 } // getAndDisplayPond()
 
@@ -912,6 +981,8 @@ void displayTitles() {
   myScreen.gText(layout.SlimTempUnits.x, layout.SlimTempUnits.y, DegreesF);
   myScreen.gText(layout.Sensor5Title.x, layout.Sensor5Title.y, Sensor5Title);
   myScreen.gText(layout.Sensor5TempUnits.x, layout.Sensor5TempUnits.y, DegreesF);
+  myScreen.gText(layout.WorkshopTitle.x, layout.WorkshopTitle.y, WorkshopTitle);
+  myScreen.gText(layout.WorkshopTempUnits.x, layout.WorkshopTempUnits.y, DegreesF);
   myScreen.gText(layout.PondTitle.x, layout.PondTitle.y, PondTitle);
   myScreen.gText(layout.PondTempUnits.x, layout.PondTempUnits.y, DegreesF);
   myScreen.gText(layout.GDTitle.x, layout.GDTitle.y, GDTitle);
@@ -922,8 +993,6 @@ void displayTitles() {
   myScreen.gText(layout.BattSlimUnits.x, layout.BattSlimUnits.y, V);
   myScreen.gText(layout.BattSensor5Subtitle.x, layout.BattSensor5Subtitle.y, Sensor5Subtitle);
   myScreen.gText(layout.BattSensor5Units.x, layout.BattSensor5Units.y, V);
-  myScreen.gText(layout.BattPondSubtitle.x, layout.BattPondSubtitle.y, PondSubtitle);
-  myScreen.gText(layout.BattPondUnits.x, layout.BattPondUnits.y, V);
   // Don't really need to display "Time and Date" title -- it's pretty obvious
   // myScreen.gText(layout.TimeAndDateTitle.x, layout.TimeAndDateTitle.y, TimeAndDateTitle);
 }
