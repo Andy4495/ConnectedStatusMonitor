@@ -27,8 +27,15 @@
   11/04/2019 - A.T. - Add Workshop temp display.
                     - Remove pond battery display (since it is AC powered)
                     - Add battery level warning for Workshop sensor
+  11/07/2019 - A.T. - Add support for VFD display
+                    - Moved light sensor to pin 68/A19
 
-
+  *** IMPORTANT ***
+  * The Kentec_35_SPI library has an issue where the _getRawTouch() function called in the begin() method
+  * can get stuck in an endless loop. Therefore, for proper operation of the display, it is necessary to 
+  * comment out the call to _getRaw_Touch() in the begin() method in the file Screen_K35_SPI.cpp in the 
+  * Kentec_35_SPI library.
+  * ***************
 
 
   *** Future improvements:
@@ -109,10 +116,10 @@ char outdoorP[PSIZE];
 char prevOutdoorP[PSIZE];
 char slimTemp[TEMPSIZE];
 char prevSlimTemp[TEMPSIZE];
-char sensor5Temp[TEMPSIZE];
-char prevSensor5Temp[TEMPSIZE];
 char pondTemp[TEMPSIZE];
 char prevPondTemp[TEMPSIZE];
+char sensor5Temp[TEMPSIZE];
+char prevSensor5Temp[TEMPSIZE];
 char workshopTemp[TEMPSIZE];
 char prevWorkshopTemp[TEMPSIZE];
 char garageDoor[GDSIZE];
@@ -126,14 +133,25 @@ char prevSensor5Batt[BATTSIZE];
 char timeAndDate[TADSIZE];
 char prevTimeAndDate[TADSIZE];
 
-#define LIGHT_SENSOR_PIN           42
-#define LIGHT_SENSOR_ADC          A13
+#define LIGHT_SENSOR_PIN           68
+#define LIGHT_SENSOR_ADC          A19
 #define LIGHT_SENSOR_THRESHOLD   2000    // Based on 10K resistor and cheap photoresistor voltage divider and 12-bit ADC (4096 max value)
 #define LIGHTS_ON_SLEEP_TIME    30000
 #define LIGHTS_OFF_SLEEP_TIME    5000
 #define BACKLIGHT_PIN              40
 #define SLEEPING_STATUS_LED      PN_1    // Flash when display backlight is off to show the unit is active
 #define LIPO_LO_BATT_LEVEL       3700
+
+// VFD support
+#include <FutabaUsVfd.h>
+#define VFD_CLOCK_PIN              74
+#define VFD_DATA_PIN               73
+#define VFD_RESET_PIN              72
+#define VFD_BUFFER_EN              76    // Controls the EN pins on the CD40109 buffer
+#define VFD_POWER_CONTROL          77    // HIGH == OFF
+#define VFD_BRIGHTNESS            128
+FutabaUsVfd vfd(VFD_CLOCK_PIN, VFD_DATA_PIN, VFD_RESET_PIN);
+int vfd_loop_counter = 0; // Used for testing
 
 int  statusLEDstate = 0;
 
@@ -142,25 +160,26 @@ int lightSensorState = LIGHTS_OFF;
 
 void setup() {
 
+  vfdIOSetup();
   pinMode(LIGHT_SENSOR_PIN, INPUT);
   pinMode(SLEEPING_STATUS_LED, OUTPUT);
   pinMode(PUSH1, INPUT_PULLUP);
-
 
   // start the serial library:
   Serial.begin(9600);
   delay(1000);
   Serial.println("Starting the Sensor Monitor...");
 
+  Serial.println("Initializing LCD...");
   myScreen.begin();
+  Serial.println("...LCD Initialized");
   myScreen.setPenSolid(true);
   myScreen.setFontSolid(false);
   myScreen.setFontSize(2);
   myScreen.setOrientation(2);
   displayStartup();
 
-
-
+  Serial.println("Initializing Ethernet...");
   // start the Ethernet connection:
   if (Ethernet.begin(mac) == 0) {
     Serial.println("Failed to configure Ethernet using DHCP.");
@@ -230,6 +249,7 @@ void loop()
         statusLEDstate = ~statusLEDstate;                     // Flash the LED
         digitalWrite(SLEEPING_STATUS_LED, statusLEDstate);
         digitalWrite(BACKLIGHT_PIN, 0);
+        vfdOff();
         delay(LIGHTS_OFF_SLEEP_TIME);
       }
       break;
@@ -241,6 +261,7 @@ void loop()
       digitalWrite(BACKLIGHT_PIN, 1);
       displayWelcome();
       displayTitles();
+      vfdOn();
       lightSensorState = LIGHTS_ON;
       break;
 
@@ -253,6 +274,7 @@ void loop()
         getAndDisplayWorkshop();
         getAndDisplayPond();
         getAndDisplayGarage();
+        displayVFD();
         Serial.println("Disconnecting. Waiting 30 seconds before next query. ");
         delay(LIGHTS_ON_SLEEP_TIME);
       }
@@ -995,6 +1017,64 @@ void displayTitles() {
   myScreen.gText(layout.BattSensor5Units.x, layout.BattSensor5Units.y, V);
   // Don't really need to display "Time and Date" title -- it's pretty obvious
   // myScreen.gText(layout.TimeAndDateTitle.x, layout.TimeAndDateTitle.y, TimeAndDateTitle);
+}
+
+void vfdIOSetup() {
+
+  pinMode(VFD_BUFFER_EN, OUTPUT);
+  digitalWrite(VFD_BUFFER_EN, LOW);        // Disable CD40109 buffer
+  pinMode(VFD_POWER_CONTROL, OUTPUT);
+  digitalWrite(VFD_POWER_CONTROL, HIGH);   // Turn off VFD power
+  pinMode(VFD_CLOCK_PIN, OUTPUT);
+  digitalWrite(VFD_CLOCK_PIN, HIGH);       // Set IO pins to initial states
+  pinMode(VFD_DATA_PIN, OUTPUT);
+  digitalWrite(VFD_DATA_PIN, LOW);
+  pinMode(VFD_RESET_PIN, OUTPUT);
+  digitalWrite(VFD_RESET_PIN, LOW);
+  
+  // Call vfd.begin to set up internal variables. Note that the 
+  // VFD is powered down at this point, so the reset and device
+  // configuration that is done in begin() aren't actually getting
+  // received by VFD. 
+  vfd.begin(16, 2);          
+
+}
+
+void vfdOff() {
+
+  Serial.println("VFD powered down.");
+  digitalWrite(VFD_BUFFER_EN, LOW);       // Disable CD40109 buffer before turning off power
+  digitalWrite(VFD_POWER_CONTROL, HIGH);
+
+}
+
+void vfdOn() {
+
+  Serial.println("VFD turned on.");
+  digitalWrite(VFD_POWER_CONTROL, LOW);   // Turn on VFD power before enabling IO pins
+  digitalWrite(VFD_CLOCK_PIN, HIGH);
+  digitalWrite(VFD_DATA_PIN, LOW);
+  digitalWrite(VFD_RESET_PIN, LOW);
+  digitalWrite(VFD_BUFFER_EN, HIGH);       // Enable IO pins
+
+  digitalWrite(VFD_RESET_PIN, HIGH);      // VFD reset sequence
+  delay(5);
+  digitalWrite(VFD_RESET_PIN, LOW);
+  delay(5);
+
+  // Configure VFD after coming out of reset
+  vfd.writeCharacterDirect(FutabaUsVfd::SET_INPUT_OUTPUT_MODE_CHARACTER);
+  vfd.writeCharacterDirect(0x01);  // I/O Mode 1: Unidirectional (no handshake)
+  vfd.clear();
+  vfd.setBrightness(VFD_BRIGHTNESS);
+}
+
+void displayVFD() {
+
+  vfd.setCursor(0, 0);
+  vfd.print("Testing:     ");
+  vfd.print(vfd_loop_counter++);
+
 }
 
 time_t getNtpTime()
