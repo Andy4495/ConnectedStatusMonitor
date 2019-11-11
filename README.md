@@ -53,9 +53,9 @@ Note that these directions are Windows-specific. Mac and Linux instructions are 
     This keeps the IDE from complaining about a posssible incompatible library.
 
 5. In the file `Screen_K35_SPI.cpp`, comment out the `_getRawTouch()` function call in the `begin()` method:
-```
-    //    _getRawTouch(x0, y0, z0);
-```
+
+        //    _getRawTouch(x0, y0, z0);
+
     The library has an issue where this function can get stuck in an endless loop.
 
 ## External Libraries ##
