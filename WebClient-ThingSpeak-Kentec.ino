@@ -1,6 +1,8 @@
 /*
   SENSOR STATUS DISPLAY
 
+  https://github.com/Andy4495/ConnectedStatusMonitor
+
   Status display for various sensor data readings downloaded from ThingSpeak IoT Platform.
   Designed specifically for use with TM4C129 Connected LaunchPad
   and Kentec Touch Display BoosterPack (SPI)
