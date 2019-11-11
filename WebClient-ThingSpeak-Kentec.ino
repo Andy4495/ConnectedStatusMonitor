@@ -31,10 +31,10 @@
                     - Moved light sensor to pin 68/A19
 
   *** IMPORTANT ***
-  * The Kentec_35_SPI library has an issue where the _getRawTouch() function called in the begin() method
-  * can get stuck in an endless loop. Therefore, for proper operation of the display, it is necessary to 
-  * comment out the call to _getRaw_Touch() in the begin() method in the file Screen_K35_SPI.cpp in the 
-  * Kentec_35_SPI library.
+    The Kentec_35_SPI library has an issue where the _getRawTouch() function called in the begin() method
+    can get stuck in an endless loop. Therefore, for proper operation of the display, it is necessary to
+    comment out the call to _getRaw_Touch() in the begin() method in the file Screen_K35_SPI.cpp in the
+    Kentec_35_SPI library.
   * ***************
 
 
@@ -106,6 +106,7 @@ Layout layout;
 #define GDSIZE    7
 #define BATTSIZE  6
 #define TADSIZE  20
+#define TIMESIZE 21
 char outdoorTemp[TEMPSIZE];
 char prevOutdoorTemp[TEMPSIZE];
 char outdoorLux[LUXSIZE];
@@ -132,6 +133,12 @@ char sensor5Batt[BATTSIZE];
 char prevSensor5Batt[BATTSIZE];
 char timeAndDate[TADSIZE];
 char prevTimeAndDate[TADSIZE];
+char weatherTime[TIMESIZE];
+char slimTime[TIMESIZE];
+char sensor5Time[TIMESIZE];
+char pondTime[TIMESIZE];
+char workshopTime[TIMESIZE];
+char garageTime[TIMESIZE];
 
 #define LIGHT_SENSOR_PIN           68
 #define LIGHT_SENSOR_ADC          A19
@@ -274,9 +281,9 @@ void loop()
         getAndDisplayWorkshop();
         getAndDisplayPond();
         getAndDisplayGarage();
-        displayVFD();
         Serial.println("Disconnecting. Waiting 30 seconds before next query. ");
-        delay(LIGHTS_ON_SLEEP_TIME);
+        displayVFD();                   // The VFD display messages take 30 seconds, so no need for separate delay.
+        //        delay(LIGHTS_ON_SLEEP_TIME);
       }
       else
       {
@@ -375,6 +382,7 @@ void getAndDisplayWeather() {
   if (root.success()) {
 
     JsonObject& feeds0 = root["feeds"][0];
+
     const char* feeds0_created_at = feeds0["created_at"]; // "2018-06-10T22:26:23Z"
     long feeds0_entry_id = feeds0["entry_id"]; // 90649
 
@@ -383,6 +391,8 @@ void getAndDisplayWeather() {
     long rh = strtol(feeds0["field5"], NULL, 10);
     long p = strtol(feeds0["field6"], NULL, 10);
     long wBatt = strtol(feeds0["field8"], NULL, 10);
+    strncpy(weatherTime, feeds0_created_at, TIMESIZE - 1);
+    weatherTime[TIMESIZE - 1] = '\0';                         // hard-code a null terminator at end of string
 
     Serial.println("Parsed JSON: ");
     Serial.print("Created at: ");
@@ -407,6 +417,7 @@ void getAndDisplayWeather() {
     snprintf(outdoorRH, RHSIZE,       " N/A");
     snprintf(outdoorP, PSIZE,        "  N/A");
     snprintf(outdoorBatt, BATTSIZE,  "  N/A");
+    strcpy(weatherTime, "N/A");
     battColor = whiteColour;
   }
 
@@ -500,6 +511,8 @@ void getAndDisplaySlim() {
 
     long Tslim = strtol(feeds0["field1"], NULL, 10);
     long sBatt = strtol(feeds0["field2"], NULL, 10);
+    strncpy(slimTime, feeds0_created_at, TIMESIZE - 1);
+    slimTime[TIMESIZE - 1] = '\0';                         // hard-code a null terminator at end of string
 
     Serial.println("Parsed JSON: ");
     Serial.print("Created at: ");
@@ -521,6 +534,7 @@ void getAndDisplaySlim() {
     Serial.println("JSON parse failed.");
     snprintf(slimTemp, TEMPSIZE, "  N/A");
     snprintf(slimBatt, BATTSIZE, "  N/A");
+    strcpy(slimTime, "N/A");
     battColor = whiteColour;
     tempColor = whiteColour;
   }
@@ -603,6 +617,8 @@ void getAndDisplaySensor5() {
 
     long T5 = strtol(feeds0["field1"], NULL, 10);
     long B5 = strtol(feeds0["field2"], NULL, 10);
+    strncpy(sensor5Time, feeds0_created_at, TIMESIZE - 1);
+    sensor5Time[TIMESIZE - 1] = '\0';                         // hard-code a null terminator at end of string
 
     Serial.println("Parsed JSON: ");
     Serial.print("Created at: ");
@@ -624,6 +640,7 @@ void getAndDisplaySensor5() {
     Serial.println("JSON parse failed.");
     snprintf(sensor5Temp, TEMPSIZE, "  N/A");
     snprintf(sensor5Batt, BATTSIZE, "  N/A");
+    strcpy(sensor5Time, "N/A");
     battColor = whiteColour;
     tempColor = whiteColour;
   }
@@ -687,6 +704,8 @@ void getAndDisplayWorkshop() {
 
     long T4 = strtol(feeds0["field1"], NULL, 10);
     long B4 = strtol(feeds0["field2"], NULL, 10); // Not checking battery level
+    strncpy(workshopTime, feeds0_created_at, TIMESIZE - 1);
+    workshopTime[TIMESIZE - 1] = '\0';                         // hard-code a null terminator at end of string
 
     Serial.println("Parsed JSON: ");
     Serial.print("Created at: ");
@@ -705,6 +724,7 @@ void getAndDisplayWorkshop() {
   {
     Serial.println("JSON parse failed.");
     snprintf(workshopTemp, TEMPSIZE, "  N/A");
+    strcpy(workshopTime, "N/A");
   }
 
   myScreen.gText(layout.WorkshopTempValue.x, layout.WorkshopTempValue.y, prevWorkshopTemp, blackColour);
@@ -780,6 +800,8 @@ void getAndDisplayPond() {
 
     long pondWaterT = strtol(feeds0["field2"], NULL, 10);
     long pondmV = strtol(feeds0["field3"], NULL, 10);
+    strncpy(pondTime, feeds0_created_at, TIMESIZE - 1);
+    pondTime[TIMESIZE - 1] = '\0';                         // hard-code a null terminator at end of string
 
     Serial.println("Parsed JSON: ");
     Serial.print("Created at: ");
@@ -793,6 +815,7 @@ void getAndDisplayPond() {
   {
     Serial.println("JSON parse failed.");
     snprintf(pondTemp, TEMPSIZE, "  N/A");
+    strcpy(pondTime, "N/A");
   }
 
   myScreen.gText(layout.PondTempValue.x, layout.PondTempValue.y, prevPondTemp, blackColour);
@@ -871,6 +894,8 @@ void getAndDisplayGarage() {
     long feeds0_entry_id = feeds0["entry_id"]; // 90649
 
     long door = strtol(feeds0["field8"], NULL, 10);
+    strncpy(garageTime, feeds0_created_at, TIMESIZE - 1);
+    garageTime[TIMESIZE - 1] = '\0';                         // hard-code a null terminator at end of string
 
     Serial.println("Parsed JSON: ");
     Serial.print("Created at: ");
@@ -891,6 +916,7 @@ void getAndDisplayGarage() {
   {
     Serial.println("JSON parse failed.");
     snprintf(garageDoor, GDSIZE, "   N/A");
+    strcpy(garageTime, "N/A");
     doorColor = whiteColour;
   }
 
@@ -1031,12 +1057,12 @@ void vfdIOSetup() {
   digitalWrite(VFD_DATA_PIN, LOW);
   pinMode(VFD_RESET_PIN, OUTPUT);
   digitalWrite(VFD_RESET_PIN, LOW);
-  
-  // Call vfd.begin to set up internal variables. Note that the 
+
+  // Call vfd.begin to set up internal variables. Note that the
   // VFD is powered down at this point, so the reset and device
   // configuration that is done in begin() aren't actually getting
-  // received by VFD. 
-  vfd.begin(16, 2);          
+  // received by VFD.
+  vfd.begin(16, 2);
 
 }
 
@@ -1071,10 +1097,30 @@ void vfdOn() {
 
 void displayVFD() {
 
-  vfd.setCursor(0, 0);
-  vfd.print("Testing:     ");
-  vfd.print(vfd_loop_counter++);
-
+  vfd.clear();
+  vfd.print("Last Wthr: ");
+  vfd.print(weatherTime);
+  delay(5000);
+  vfd.clear();
+  vfd.print("Last Slim: ");
+  vfd.print(slimTime);
+  delay(5000);
+  vfd.clear();
+  vfd.print("Last Garg: ");
+  vfd.print(sensor5Time);
+  delay(5000);
+  vfd.clear();
+  vfd.print("Last Pond: ");
+  vfd.print(pondTime);
+  delay(5000);
+  vfd.clear();
+  vfd.print("Last Wksh: ");
+  vfd.print(workshopTime);
+  delay(5000);
+  vfd.clear();
+  vfd.print("Last Rptr: ");
+  vfd.print(garageTime);
+  delay(5000);
 }
 
 time_t getNtpTime()

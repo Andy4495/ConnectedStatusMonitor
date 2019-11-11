@@ -3,7 +3,7 @@ Connected IoT Status Monitor
 
 Energia (Arduino-derived IDE for TI microcontrollers) sketch for a status display of various sensor data readings that are queried from the ThingSpeak IoT Platform.
 
-The sketch is specifically designed for use with the Texas Instruments TM4C1294 [Connected LaunchPad][1] and [Kentec Touch Display BoosterPack][2] (SPI version).
+The sketch is specifically designed for use with the Texas Instruments TM4C1294 [Connected LaunchPad][1], [Kentec Touch Display BoosterPack][2] (SPI version), and the [Futaba 162SD03][9] Vacuum Fluorescent Display.
 
 While the sketch is written for a specific hardware configuration, it can be used as an example for the following (both on Arduino and Energia platforms):
 - TCP and UDP connections using Ethernet
@@ -21,8 +21,11 @@ Parts of the code are messy and could be improved. However, it does what I want,
 ## Light Detector Circuit ##
 This display is located in a windowless workshop, and I only want the display backlight on and the board querying the sensors database when I am in the workshop -- which is essentially any time the room light is on. So I constructed a simple circuit using a 10K resistor and a cheap photo resistor (which probably came from an Arduino starter kit). The 10K and photo resistors are wired in series, with the 10K pulled to Vcc and the photo resistor connected to ground. Analog Pin A13 reads the voltage at the 10K/photo resistor connection (a simple voltage divider). Since it is just checking for a dark room vs. a lighted room, a threshold of half the ADC range is used.
 
+## Vacuum Fluorescent Display
+The Futaba VFD is also only enabled when the light detector senses that the room light is on. I created a power control circuit with a logic-level MOSFET along with a tri-state buffer for the control signals to the VFD (so that the CLK, DATA, and RESET signals to the VFD are only active when the VFD is powered).
+
 ## Ethernet Status LEDs ##
-The Connected LaunchPad supports Ethernet Link (LED4) and Activity (LED3) status indicators. However, I find these LEDs are bright and distracting. So the sketch disables them by default. If you want to enable them, hold down PUSH1 (labeled "USR_SW1" on the board's silkscreen) during reset.
+The Connected LaunchPad supports Ethernet Link (LED4) and Activity (LED3) status indicators. However, I find these LEDs are bright and distracting. The sketch disables them by default. If you want to enable them, hold down PUSH1 (labeled "USR_SW1" on the board's silkscreen) during reset.
 
 ## Kentec Display Library ##
 The [LCD display][2] requires the Screen_K35_SPI library. This library is included in the MSP430 board package with Energia, but not in the Tiva boards package. The MSP430 version of the library requires some minor modifications to work with the TM4C1294 LauchPad. These steps need to be performed any time you upgrade Energia or the Tiva boards package version.
@@ -49,9 +52,17 @@ Note that these directions are Windows-specific. Mac and Linux instructions are 
 
     This keeps the IDE from complaining about a posssible incompatible library.
 
+5. In the file `Screen_K35_SPI.cpp`, comment out the `_getRawTouch()` function call in the `begin()` method:
+```
+    //    _getRawTouch(x0, y0, z0);
+```
+    The library has an issue where this function can get stuck in an endless loop.
+
 ## External Libraries ##
 * [ArduinoJson][3]
 * [Arduino Time Library][5]
+* [FutabaUsVfd Library][8]
+    * This is an updated version of the library available on [Arduino Playground][10]
 
 ## References ##
 * Texas Instruments TM4C1294 Connected LaunchPad [EK-TM4C1294XL][1]
@@ -59,6 +70,7 @@ Note that these directions are Windows-specific. Mac and Linux instructions are 
 * ThingsSpeak [IoT platform][6]
 * ThingsSpeak REST API [documentation][4]
 * Arduino Playground photo resistor [tutorial][7]
+* Arduino Playground [FutabaUsVfd][10]
 
 [1]: http://www.ti.com/tool/EK-TM4C1294XL
 [2]: http://www.ti.com/tool/boostxl-k350qvg-s1
@@ -67,3 +79,6 @@ Note that these directions are Windows-specific. Mac and Linux instructions are 
 [5]: https://github.com/PaulStoffregen/Time
 [6]: https://thingspeak.com/
 [7]: https://playground.arduino.cc/Learning/PhotoResistor
+[8]: https://github.com/Andy4495/FutabaUsVfd
+[9]: https://www.allelectronics.com/mas_assets/media/allelectronics2018/spec/VFD-162.pdf
+[10]: https://playground.arduino.cc/Main/FutabaUsVfd/
