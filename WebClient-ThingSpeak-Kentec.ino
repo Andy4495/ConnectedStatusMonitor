@@ -29,6 +29,7 @@
                     - Add battery level warning for Workshop sensor
   11/07/2019 - A.T. - Add support for VFD display
                     - Moved light sensor to pin 68/A19
+  11/11/2019 - A.T. - Update VFD message text.
 
   *** IMPORTANT ***
     The Kentec_35_SPI library has an issue where the _getRawTouch() function called in the begin() method
@@ -278,8 +279,8 @@ void loop()
         getAndDisplayWeather();
         getAndDisplaySlim();
         getAndDisplaySensor5();
-        getAndDisplayWorkshop();
         getAndDisplayPond();
+        getAndDisplayWorkshop();
         getAndDisplayGarage();
         Serial.println("Disconnecting. Waiting 30 seconds before next query. ");
         displayVFD();                   // The VFD display messages take 30 seconds, so no need for separate delay.
@@ -1096,31 +1097,39 @@ void vfdOn() {
 }
 
 void displayVFD() {
+#define DISPLAY_DELAY 8000
 
+  // Printing time text "+5" to skip over "YYYY-" in time string
   vfd.clear();
-  vfd.print("Last Wthr: ");
-  vfd.print(weatherTime);
-  delay(5000);
+  vfd.print("Weather: ");
+  vfd.setCursor(0, 1);        // Line 2
+  vfd.print(weatherTime + 5);
+  delay(DISPLAY_DELAY);
   vfd.clear();
-  vfd.print("Last Slim: ");
-  vfd.print(slimTime);
-  delay(5000);
+  vfd.print("Slim: ");
+  vfd.setCursor(0, 1);        // Line 2
+  vfd.print(slimTime + 5);
+  delay(DISPLAY_DELAY);
   vfd.clear();
-  vfd.print("Last Garg: ");
-  vfd.print(sensor5Time);
-  delay(5000);
+  vfd.print("Gargoyle: ");
+  vfd.setCursor(0, 1);        // Line 2
+  vfd.print(sensor5Time + 5);
+  delay(DISPLAY_DELAY);
   vfd.clear();
-  vfd.print("Last Pond: ");
-  vfd.print(pondTime);
-  delay(5000);
+  vfd.print("Pond: ");
+  vfd.setCursor(0, 1);        // Line 2
+  vfd.print(pondTime + 5);
+  delay(DISPLAY_DELAY);
   vfd.clear();
-  vfd.print("Last Wksh: ");
-  vfd.print(workshopTime);
-  delay(5000);
+  vfd.print("Workshop: ");
+  vfd.setCursor(0, 1);        // Line 2
+  vfd.print(workshopTime + 5);
+  delay(DISPLAY_DELAY);
   vfd.clear();
-  vfd.print("Last Rptr: ");
-  vfd.print(garageTime);
-  delay(5000);
+  vfd.print("Repeater: ");
+  vfd.setCursor(0, 1);        // Line 2
+  vfd.print(garageTime + 5);
+  delay(DISPLAY_DELAY);
 }
 
 time_t getNtpTime()
