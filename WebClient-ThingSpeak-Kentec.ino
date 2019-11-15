@@ -32,6 +32,8 @@
   11/07/2019 - A.T. - Add support for VFD display
                     - Moved light sensor to pin 68/A19
   11/11/2019 - A.T. - Update VFD message text.
+  11/14/2019 - A.T. - Adjust VFD display timing. 
+                      Change lipo low batt level to 3.8V (lasts about 2.5 days at this point)
 
   *** IMPORTANT ***
     The Kentec_35_SPI library has an issue where the _getRawTouch() function called in the begin() method
@@ -150,7 +152,7 @@ char garageTime[TIMESIZE];
 #define LIGHTS_OFF_SLEEP_TIME    5000
 #define BACKLIGHT_PIN              40
 #define SLEEPING_STATUS_LED      PN_1    // Flash when display backlight is off to show the unit is active
-#define LIPO_LO_BATT_LEVEL       3700
+#define LIPO_LO_BATT_LEVEL       3800
 
 // VFD support
 #include <FutabaUsVfd.h>
@@ -420,7 +422,7 @@ void getAndDisplayWeather() {
     snprintf(outdoorRH, RHSIZE,       " N/A");
     snprintf(outdoorP, PSIZE,        "  N/A");
     snprintf(outdoorBatt, BATTSIZE,  "  N/A");
-    strcpy(weatherTime, "N/A");
+    strcpy(weatherTime, "     N/A");
     battColor = whiteColour;
   }
 
@@ -537,7 +539,7 @@ void getAndDisplaySlim() {
     Serial.println("JSON parse failed.");
     snprintf(slimTemp, TEMPSIZE, "  N/A");
     snprintf(slimBatt, BATTSIZE, "  N/A");
-    strcpy(slimTime, "N/A");
+    strcpy(slimTime, "     N/A");
     battColor = whiteColour;
     tempColor = whiteColour;
   }
@@ -643,7 +645,7 @@ void getAndDisplaySensor5() {
     Serial.println("JSON parse failed.");
     snprintf(sensor5Temp, TEMPSIZE, "  N/A");
     snprintf(sensor5Batt, BATTSIZE, "  N/A");
-    strcpy(sensor5Time, "N/A");
+    strcpy(sensor5Time, "     N/A");
     battColor = whiteColour;
     tempColor = whiteColour;
   }
@@ -727,7 +729,7 @@ void getAndDisplayWorkshop() {
   {
     Serial.println("JSON parse failed.");
     snprintf(workshopTemp, TEMPSIZE, "  N/A");
-    strcpy(workshopTime, "N/A");
+    strcpy(workshopTime, "     N/A");
   }
 
   myScreen.gText(layout.WorkshopTempValue.x, layout.WorkshopTempValue.y, prevWorkshopTemp, blackColour);
@@ -818,7 +820,7 @@ void getAndDisplayPond() {
   {
     Serial.println("JSON parse failed.");
     snprintf(pondTemp, TEMPSIZE, "  N/A");
-    strcpy(pondTime, "N/A");
+    strcpy(pondTime, "     N/A");
   }
 
   myScreen.gText(layout.PondTempValue.x, layout.PondTempValue.y, prevPondTemp, blackColour);
@@ -919,7 +921,7 @@ void getAndDisplayGarage() {
   {
     Serial.println("JSON parse failed.");
     snprintf(garageDoor, GDSIZE, "   N/A");
-    strcpy(garageTime, "N/A");
+    strcpy(garageTime, "     N/A");
     doorColor = whiteColour;
   }
 
@@ -1099,7 +1101,7 @@ void vfdOn() {
 }
 
 void displayVFD() {
-#define DISPLAY_DELAY 8000
+#define DISPLAY_DELAY 7000
 
   // Printing time text "+5" to skip over "YYYY-" in time string
   vfd.clear();
@@ -1131,7 +1133,7 @@ void displayVFD() {
   vfd.print("Repeater: ");
   vfd.setCursor(0, 1);        // Line 2
   vfd.print(garageTime + 5);
-  delay(DISPLAY_DELAY);
+//  delay(DISPLAY_DELAY);    // No delay after last status, since pulling update from ThingSpeak takes several seconds
 }
 
 time_t getNtpTime()
