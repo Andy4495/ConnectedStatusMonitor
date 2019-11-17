@@ -22,7 +22,7 @@ Parts of the code are messy and could be improved. However, it does what I want,
 This display is located in a windowless workshop, and I only want  the board querying the sensors database when I am in the workshop -- which is essentially any time the room light is on. In addition, the LCD backlight and VFD draw about 400 mA (out of a total 540 mA), so I want to minimize power usage when I'm not in the workshop. I constructed a simple circuit using a 10K resistor and a cheap photo resistor (which probably came from an Arduino starter kit). The 10K and photo resistors are wired in series, with the 10K pulled to Vcc and the photo resistor connected to ground. Analog Pin A19 reads the voltage at the 10K/photo resistor connection (a simple voltage divider). Since it is just checking for a dark room vs. a lighted room, a threshold of half the ADC range is used.
 
 ## Vacuum Fluorescent Display
-The Futaba VFD is enabled by a power control circuit with a logic-level MOSFET along with a CD40109 tri-state buffer for the control signals to the VFD. The CLK, DATA, and RESET signals to the VFD are only active when the VFD is powered.
+The [Futaba VFD][9] is enabled by a power control circuit with a logic-level MOSFET along with a [CD40109][11] tri-state buffer for the control signals to the VFD. The CLK, DATA, and RESET signals to the VFD are only active when the VFD is powered.
 
 ## Ethernet Status LEDs ##
 The Connected LaunchPad supports Ethernet Link (LED4) and Activity (LED3) status indicators. However, I find these LEDs are bright and distracting. The sketch disables them by default. If you want to enable them, hold down PUSH1 (labeled "USR_SW1" on the board's silkscreen) during reset.
@@ -67,6 +67,8 @@ Note that these directions are Windows-specific. Mac and Linux instructions are 
 ## References ##
 * Texas Instruments TM4C1294 Connected LaunchPad [EK-TM4C1294XL][1]
 * Kentec Touch Display BoosterPack (SPI) [BOOSTXL-K350QVG-S1][2]
+* Futaba [162SD03][9] Vacuum Fluorescent Display
+* [CD40109][11] Buffer/Level-Shifter
 * ThingsSpeak [IoT platform][6]
 * ThingsSpeak REST API [documentation][4]
 * Arduino Playground photo resistor [tutorial][7]
@@ -82,3 +84,4 @@ Note that these directions are Windows-specific. Mac and Linux instructions are 
 [8]: https://github.com/Andy4495/FutabaUsVfd
 [9]: https://www.allelectronics.com/mas_assets/media/allelectronics2018/spec/VFD-162.pdf
 [10]: https://playground.arduino.cc/Main/FutabaUsVfd/
+[11]: https://www.ti.com/lit/ds/symlink/cd40109b.pdf
