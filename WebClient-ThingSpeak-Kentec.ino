@@ -32,8 +32,10 @@
   11/07/2019 - A.T. - Add support for VFD display
                     - Moved light sensor to pin 68/A19
   11/11/2019 - A.T. - Update VFD message text.
-  11/14/2019 - A.T. - Adjust VFD display timing. 
+  11/14/2019 - A.T. - Adjust VFD display timing.
                       Change lipo low batt level to 3.8V (lasts about 2.5 days at this point)
+  11/21/2019 - A.T. - Turn sensor 4 and 5 voltage reading red if less than 2 days remaining.
+                      (Sensors 4 and 5 now send charge time remaining instead of millis).
 
   *** IMPORTANT ***
     The Kentec_35_SPI library has an issue where the _getRawTouch() function called in the begin() method
@@ -153,6 +155,7 @@ char garageTime[TIMESIZE];
 #define BACKLIGHT_PIN              40
 #define SLEEPING_STATUS_LED      PN_1    // Flash when display backlight is off to show the unit is active
 #define LIPO_LO_BATT_LEVEL       3800
+#define LIPO_LO_TIME_REMAIN   2*60*24    // Set red display if Fuel Tank thinks there is < 2 days left
 
 // VFD support
 #include <FutabaUsVfd.h>
@@ -622,6 +625,7 @@ void getAndDisplaySensor5() {
 
     long T5 = strtol(feeds0["field1"], NULL, 10);
     long B5 = strtol(feeds0["field2"], NULL, 10);
+    long remain5 = strtol(feeds0["field4"], NULL, 10);
     strncpy(sensor5Time, feeds0_created_at, TIMESIZE - 1);
     sensor5Time[TIMESIZE - 1] = '\0';                         // hard-code a null terminator at end of string
 
@@ -634,7 +638,7 @@ void getAndDisplaySensor5() {
     if (T5 > 850) tempColor = redColour;
     else tempColor = greenColour;
 
-    if (B5 < LIPO_LO_BATT_LEVEL) battColor = redColour;
+    if ( (B5 < LIPO_LO_BATT_LEVEL) || (remain5 < LIPO_LO_TIME_REMAIN) ) battColor = redColour;
     else battColor = greenColour;
 
     snprintf(sensor5Temp, TEMPSIZE, "%3i.%i", T5 / 10, abs(T5) % 10);
@@ -708,7 +712,8 @@ void getAndDisplayWorkshop() {
     long feeds0_entry_id = feeds0["entry_id"]; // 90649
 
     long T4 = strtol(feeds0["field1"], NULL, 10);
-    long B4 = strtol(feeds0["field2"], NULL, 10); // Not checking battery level
+    long B4 = strtol(feeds0["field2"], NULL, 10);
+    long remain4 = strtol(feeds0["field4"], NULL, 10);
     strncpy(workshopTime, feeds0_created_at, TIMESIZE - 1);
     workshopTime[TIMESIZE - 1] = '\0';                         // hard-code a null terminator at end of string
 
@@ -718,7 +723,7 @@ void getAndDisplayWorkshop() {
     Serial.print("Entry ID: ");
     Serial.println(feeds0_entry_id);
 
-    if (B4 < LIPO_LO_BATT_LEVEL)
+    if ( (B4 < LIPO_LO_BATT_LEVEL) || (remain4 < LIPO_LO_TIME_REMAIN))
       battColor = redColour;
     else
       battColor = blackColour;
@@ -1133,7 +1138,7 @@ void displayVFD() {
   vfd.print("Repeater: ");
   vfd.setCursor(0, 1);        // Line 2
   vfd.print(garageTime + 5);
-//  delay(DISPLAY_DELAY);    // No delay after last status, since pulling update from ThingSpeak takes several seconds
+  //  delay(DISPLAY_DELAY);    // No delay after last status, since pulling update from ThingSpeak takes several seconds
 }
 
 time_t getNtpTime()
