@@ -36,6 +36,7 @@
                       Change lipo low batt level to 3.8V (lasts about 2.5 days at this point)
   11/21/2019 - A.T. - Turn sensor 4 and 5 voltage reading red if less than 2 days remaining.
                       (Sensors 4 and 5 now send charge time remaining instead of millis).
+  12/01/2019 - A.T. - Add support for displaying Pressure history on SparkFun OLED.
 
   *** IMPORTANT ***
     The Kentec_35_SPI library has an issue where the _getRawTouch() function called in the begin() method
@@ -59,6 +60,7 @@
 #include <EthernetUdp.h>
 #include <TimeLib.h>                 // From https://github.com/PaulStoffregen/Time
 #include "dst.h"
+
 
 #include "Screen_K35_SPI.h"
 Screen_K35_SPI myScreen;
@@ -168,6 +170,29 @@ char garageTime[TIMESIZE];
 FutabaUsVfd vfd(VFD_CLOCK_PIN, VFD_DATA_PIN, VFD_RESET_PIN);
 int vfd_loop_counter = 0; // Used for testing
 
+// SparkFun OLED support
+#include <SFE_MicroOLED.h>           // https://github.com/Andy4495/SparkFun_Micro_OLED_Arduino_Library
+// MicroOLED(uint8_t rst, uint8_t dc, uint8_t cs, uint8_t wr, uint8_t rd,
+//           uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3,
+//           uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7)
+MicroOLED oled(35, 50, 79, 48, 58,
+               12, 29, 49, 85, 86, 59, 51, 30);
+/* Test data
+  long p_hist[] = { 2902, 2902, 2902, 2902, 2903, 2903, 2903, 2903, 2903, 2903, 2903, 2904, 2904, 2904, 2905, 2905,
+                 2904, 2905, 2905, 2905, 2905, 2905, 2905, 2906, 2906, 2906, 2907, 2907, 2907, 2907, 2909, 2908,
+                 2908, 2908, 2909, 2909, 2909, 2908, 2909, 2909, 2909, 2910, 2910, 2911, 2911, 2911, 2911, 2911,
+                 2911, 2912, 2912, 2912, 2912, 2913, 2913, 2913, 2913, 2914, 2914, 2914, 2914, 2914, 2915, 2915
+               };
+*/
+
+// Circular buffer of Pressure readings.
+// Initial value of 0xFEFE so only show partial display with limited data on startup
+long p_hist[64];
+unsigned int hist_position = 0;         // Current position in p_hist circular buffer
+unsigned int hist_num_entries = 0;      // Number of valid entries in the history (used after reset until buffer is filled first time)
+const unsigned int hist_len = 64;
+long last_weather_entry_id = 0;  // Used to track whether we received new data
+
 int  statusLEDstate = 0;
 
 enum {LIGHTS_OFF, LIGHTS_TURNED_ON, LIGHTS_ON, LIGHTS_TURNED_OFF};
@@ -178,6 +203,9 @@ void setup() {
   vfdIOSetup();
   pinMode(LIGHT_SENSOR_PIN, INPUT);
   pinMode(SLEEPING_STATUS_LED, OUTPUT);
+
+  /// This is just for checking button out of reset
+  /// The rest of the time, this pin (85/PJ0) is used as data pin to OLED.
   pinMode(PUSH1, INPUT_PULLUP);
 
   // start the serial library:
@@ -245,6 +273,12 @@ void setup() {
   Udp.begin(localPort);
   Serial.println("Setting up NTP...");
   setSyncProvider(getNtpTime);
+
+  Serial.println("Setting up OLED.");
+  oled.begin();     // Initialize the OLED
+  oled.clear(PAGE); // Clear the display's internal memory
+  oled.clear(ALL);  // Clear the library's display buffer
+  oled.command(DISPLAYOFF); // Turn off the display until other displays are enabled
 }
 
 void loop()
@@ -265,6 +299,7 @@ void loop()
         digitalWrite(SLEEPING_STATUS_LED, statusLEDstate);
         digitalWrite(BACKLIGHT_PIN, 0);
         vfdOff();
+        oled.command(DISPLAYOFF);
         delay(LIGHTS_OFF_SLEEP_TIME);
       }
       break;
@@ -277,6 +312,7 @@ void loop()
       displayWelcome();
       displayTitles();
       vfdOn();
+      oled.command(DISPLAYON);
       lightSensorState = LIGHTS_ON;
       break;
 
@@ -290,7 +326,9 @@ void loop()
         getAndDisplayWorkshop();
         getAndDisplayGarage();
         Serial.println("Disconnecting. Waiting 30 seconds before next query. ");
-        displayVFD();                   // The VFD display messages take 30 seconds, so no need for separate delay.
+        displayOLED();
+        displayVFD();
+        // The VFD display messages take 30 seconds, so no need for separate delay.
         //        delay(LIGHTS_ON_SLEEP_TIME);
       }
       else
@@ -416,6 +454,19 @@ void getAndDisplayWeather() {
 
     if (wBatt < 2500) battColor = redColour;
     else battColor = greenColour;
+
+    if (feeds0_entry_id != last_weather_entry_id) {
+      last_weather_entry_id = feeds0_entry_id;
+      if (hist_num_entries < hist_len)  // If we haven't filled the buffer the first time after reset
+      {
+        p_hist[hist_num_entries++] = p;
+      }
+      else // Once buffer has filled, then use a circular buffer and track current postion with wraparound
+      {
+        p_hist[hist_position++] = p;
+        if (hist_position == hist_len) hist_position = 0; // Wrap around if needed.
+      }
+    }
   }
   else
   {
@@ -1139,7 +1190,48 @@ void displayVFD() {
   vfd.setCursor(0, 1);        // Line 2
   vfd.print(garageTime + 5);
   //  delay(DISPLAY_DELAY);    // No delay after last status, since pulling update from ThingSpeak takes several seconds
-}
+} // displayVFD()
+
+void displayOLED() {
+  int hist_max = 0;
+  int hist_min = 32767;
+  char p_decimal[3];
+
+  for (int i = 0; i < hist_num_entries; i++) {
+    if ( p_hist[i] > hist_max) hist_max = p_hist[i];
+    if ( p_hist[i] < hist_min) hist_min = p_hist[i];
+  }
+
+  Serial.print("Min: ");
+  Serial.println(hist_min);
+  Serial.print("Max: ");
+  Serial.println(hist_max);
+  Serial.print("Hist size: ");
+  Serial.println(hist_num_entries);
+  Serial.print("Hist position: ");
+  Serial.println(hist_position);
+
+  for (int i = 0; i < hist_num_entries; i++) {
+    oled.pixel(i, map(p_hist[(i + hist_position ) % hist_len], hist_min, hist_max, 34, 0));
+  }
+
+  if (hist_num_entries > 0) {
+    oled.setFontType(1);  // 8x16 characters
+    oled.setCursor(0, 37); // Bottom row, no blank pixel under letters
+    oled.print("P:");
+    if (hist_num_entries < hist_len) oled.print(p_hist[hist_num_entries - 1] / 100);
+    else oled.print(p_hist[(hist_position - 1) % hist_len] / 100);
+    oled.print(".");
+    if (hist_num_entries < hist_len) {
+      snprintf(p_decimal, 3, "%.2d", p_hist[hist_num_entries - 1] % 100);
+    }
+    else {
+      snprintf(p_decimal, 3, "%.2d", p_hist[(hist_position - 1) % hist_len] % 100);
+    }
+    oled.print(p_decimal); 
+    oled.display();
+  }
+} // displayOLED()
 
 time_t getNtpTime()
 {
