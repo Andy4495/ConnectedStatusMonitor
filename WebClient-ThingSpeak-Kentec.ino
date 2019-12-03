@@ -36,7 +36,11 @@
                       Change lipo low batt level to 3.8V (lasts about 2.5 days at this point)
   11/21/2019 - A.T. - Turn sensor 4 and 5 voltage reading red if less than 2 days remaining.
                       (Sensors 4 and 5 now send charge time remaining instead of millis).
-  12/01/2019 - A.T. - Add support for displaying Pressure history on SparkFun OLED.
+  12/01/2019 - A.T. - Add support for displaying Pressure history on SparkFun OLED (parallel mode).
+                      -- Query ThingSpeak for pressure data even when display is off
+                    - Don't display time if no response/invalid response from time server
+                    - Updated low battery thresholds
+                    - Remove check for PUSH1 -- ethernet status LEDs always disabled. 
 
   *** IMPORTANT ***
     The Kentec_35_SPI library has an issue where the _getRawTouch() function called in the begin() method
@@ -44,13 +48,15 @@
     comment out the call to _getRaw_Touch() in the begin() method in the file Screen_K35_SPI.cpp in the
     Kentec_35_SPI library.
   * ***************
+    This sketch uses a modified version of SparkFun's MicroOLED library so that it compiles with Energia
+    and works with MSP and TM4C129 processors:  https://github.com/Andy4495/SparkFun_Micro_OLED_Arduino_Library
+  * ***************
 
 
   *** Future improvements:
     Color a sensor value (or the label) yellow or red if an update has not been received for more than X minutes
     Add a pixel to y-coordinates to allow for hanging comma space (otherwise comma touches next line)
     Update lux string to include commas
-    Have pressure indicate increasing or decreasing since last measurement (or same or if last measure was N/A)
     Deal with JSON parse failure -- maybe just display last good value (i.e., no display indication of bad JSON)
 
 */
@@ -85,6 +91,8 @@ const char* timeServer = "time.nist.gov";  // Automatically resolves to nearest 
 int timeZone = STANDARD_TZ;   // Use standard time, DST correction is done later
 
 time_t t;
+
+uint16_t timeColor;
 
 EthernetUDP Udp;
 unsigned int localPort = 8888;  // local port to listen for UDP packets
@@ -171,6 +179,7 @@ FutabaUsVfd vfd(VFD_CLOCK_PIN, VFD_DATA_PIN, VFD_RESET_PIN);
 int vfd_loop_counter = 0; // Used for testing
 
 // SparkFun OLED support
+// This is a modified version of SparkFun's library so that it compiles with Energia and works with MSP and TM4C129 processors
 #include <SFE_MicroOLED.h>           // https://github.com/Andy4495/SparkFun_Micro_OLED_Arduino_Library
 // MicroOLED(uint8_t rst, uint8_t dc, uint8_t cs, uint8_t wr, uint8_t rd,
 //           uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3,
@@ -192,6 +201,8 @@ unsigned int hist_position = 0;         // Current position in p_hist circular b
 unsigned int hist_num_entries = 0;      // Number of valid entries in the history (used after reset until buffer is filled first time)
 const unsigned int hist_len = 64;
 long last_weather_entry_id = 0;  // Used to track whether we received new data
+unsigned long lastPressureQuery = 0; // Track times between readings when displays are off
+#define PRESSURE_READINGS_TIME 120000UL   // Time between readings: 2 minutes (2 min * 60 s/min * 1000 ms/s)
 
 int  statusLEDstate = 0;
 
@@ -237,19 +248,21 @@ void setup() {
   // give the Ethernet shield a second to initialize:
   delay(1000);
 
-  // Turn on Ethernet status LEDs if PUSH1 is pressed at reboot
-  // Otherwise, they default to off.
-  if (digitalRead(PUSH1) == LOW) {
-    Ethernet.enableLinkLed();
-    Ethernet.enableActivityLed();
-    Serial.println("Ethernet LINK and ACTIVITY LEDs enabled.");
-  }
-  else {
-    Serial.println("Ethernet status LEDs disabled.");
-    // Following code can be used to turn of Ethernet status LEDs
-    // GPIODirModeSet(ACTIVITY_LED_BASE, ACTIVITY_LED_PIN, GPIO_DIR_MODE_IN);
-    // GPIODirModeSet(LINK_LED_BASE, LINK_LED_PIN, GPIO_DIR_MODE_IN);
-  }
+  /* Disable this check since the I/O pin used for PUSH1 is used by the OLED
+    // Turn on Ethernet status LEDs if PUSH1 is pressed at reboot
+    // Otherwise, they default to off.
+    if (digitalRead(PUSH1) == LOW) {
+      Ethernet.enableLinkLed();
+      Ethernet.enableActivityLed();
+      Serial.println("Ethernet LINK and ACTIVITY LEDs enabled.");
+    }
+    else {
+      Serial.println("Ethernet status LEDs disabled by default.");
+      // Following code can be used to turn off Ethernet status LEDs (default)
+      // GPIODirModeSet(ACTIVITY_LED_BASE, ACTIVITY_LED_PIN, GPIO_DIR_MODE_IN);
+      // GPIODirModeSet(LINK_LED_BASE, LINK_LED_PIN, GPIO_DIR_MODE_IN);
+    }
+  */
 
   Serial.print("JsonBuffer size: ");
   Serial.println(bufferSize);
@@ -294,11 +307,18 @@ void loop()
       if (lightSensor > LIGHT_SENSOR_THRESHOLD) {
         lightSensorState = LIGHTS_TURNED_ON;
       }
+
       else {
+        if (millis() - lastPressureQuery > PRESSURE_READINGS_TIME) {
+          lastPressureQuery = millis();
+          getPressure();
+        }
         statusLEDstate = ~statusLEDstate;                     // Flash the LED
         digitalWrite(SLEEPING_STATUS_LED, statusLEDstate);
         digitalWrite(BACKLIGHT_PIN, 0);
         vfdOff();
+        oled.clear(PAGE);
+        oled.display();
         oled.command(DISPLAYOFF);
         delay(LIGHTS_OFF_SLEEP_TIME);
       }
@@ -356,6 +376,17 @@ void GetThingSpeakChannel(EthernetClient* c, const char* chan, const char* key, 
   char buffer[BUF_SIZE];
 
   snprintf(buffer, BUF_SIZE, "GET /channels/%s/feeds.json?api_key=%s&results=%d", chan, key, results);
+  /// Serial.println(buffer);
+  c->println(buffer);
+  c->println();
+}
+
+void GetThingSpeakField(EthernetClient* c, const char* chan, const char* key, const char* field, int results)
+{
+  const int BUF_SIZE = 256;
+  char buffer[BUF_SIZE];
+
+  snprintf(buffer, BUF_SIZE, "GET /channels/%s/field/%s.json?api_key=%s&results=%d", chan, field, key, results);
   /// Serial.println(buffer);
   c->println(buffer);
   c->println();
@@ -452,7 +483,7 @@ void getAndDisplayWeather() {
     snprintf(outdoorP, PSIZE, "%2i.%02i", p / 100, p % 100);
     snprintf(outdoorBatt, BATTSIZE, "%i.%03i", wBatt / 1000, wBatt % 1000);
 
-    if (wBatt < 2500) battColor = redColour;
+    if (wBatt < 2600) battColor = redColour;
     else battColor = greenColour;
 
     if (feeds0_entry_id != last_weather_entry_id) {
@@ -501,6 +532,102 @@ void getAndDisplayWeather() {
   strncpy(prevOutdoorBatt, outdoorBatt, BATTSIZE);
 
 } // getAndDisplayWeather()
+
+void getPressure() {
+
+  DynamicJsonBuffer jsonBuffer(bufferSize);
+
+  int i = 0;
+  char c;
+
+  // if you get a connection, report back via serial:
+  if (client.connect(server, 80)) {
+    Serial.println("connected");
+  }
+  else {
+    // if you didn't get a connection to the server:
+    Serial.println("connection failed");
+  }
+
+  // Make a HTTP request for Weather Station
+  GetThingSpeakField(&client, WEATHERSTATION_CHANNEL, WEATHERSTATION_KEY, "field6", 1);
+
+  // Need to check for connection and wait for characters
+  // Need to timeout after some time, but not too soon before receiving response
+  // Initially just use delay(), but replace with improved code using millis()
+  delay(750);
+
+  while (client.connected()) {
+    /// Add a timeout with millis()
+    c = client.read();
+    if (c != -1) receiveBuffer[i++] = c;
+    if (i > sizeof(receiveBuffer) - 2) break;    // Leave a byte for the null terminator
+  }
+
+  receiveBuffer[i] = '\0';
+  Serial.print("JSON received size: ");
+  Serial.println(i);
+  Serial.println("JSON received (field6): ");
+  Serial.println(receiveBuffer);
+  Serial.println("");
+  client.stop();
+
+  JsonObject& root = jsonBuffer.parseObject(receiveBuffer);
+  /*
+    "Parsing Program" code generated from ArduinoJson Assistant at arduinojson.org:
+
+    JsonObject& channel = root["channel"];
+    long channel_id = channel["id"]; // 379945
+    const char* channel_name = channel["name"]; // "Weather-Station"
+    const char* channel_description = channel["description"]; // "Outdoor weather station using MSP430 LaunchPad and SENSORS BoosterPack. "
+    const char* channel_latitude = channel["latitude"]; // "0.0"
+    const char* channel_longitude = channel["longitude"]; // "0.0"
+    const char* channel_field6 = channel["field6"]; // "Pressure-BME280"
+    const char* channel_created_at = channel["created_at"]; // "2017-12-07T00:28:34Z"
+    const char* channel_updated_at = channel["updated_at"]; // "2018-06-10T22:26:22Z"
+    long channel_last_entry_id = channel["last_entry_id"]; // 90649
+  */
+
+  if (root.success()) {
+
+    JsonObject& feeds0 = root["feeds"][0];
+
+    const char* feeds0_created_at = feeds0["created_at"]; // "2018-06-10T22:26:23Z"
+    long feeds0_entry_id = feeds0["entry_id"]; // 90649
+
+    long p = strtol(feeds0["field6"], NULL, 10);
+
+    Serial.println("Parsed JSON: ");
+    Serial.print("Pressure: ");
+    Serial.println(p);
+    Serial.print("Created at: ");
+    Serial.println(feeds0_created_at);
+    Serial.print("Entry ID: ");
+    Serial.println(feeds0_entry_id);
+
+    if (feeds0_entry_id != last_weather_entry_id) {
+      last_weather_entry_id = feeds0_entry_id;
+      if (hist_num_entries < hist_len)  // If we haven't filled the buffer the first time after reset
+      {
+        p_hist[hist_num_entries++] = p;
+      }
+      else // Once buffer has filled, then use a circular buffer and track current postion with wraparound
+      {
+        p_hist[hist_position++] = p;
+        if (hist_position == hist_len) hist_position = 0; // Wrap around if needed.
+      }
+    }
+    Serial.print("hist_num_entries: ");
+    Serial.println(hist_num_entries);
+    Serial.print("hist_position: ");
+    Serial.println(hist_position);
+  }
+  else
+  {
+    Serial.println("JSON parse failed.");
+  }
+} // getPressure()
+
 
 void getAndDisplaySlim() {
 
@@ -582,7 +709,7 @@ void getAndDisplaySlim() {
     if (Tslim < 800) tempColor = redColour;
     else tempColor = greenColour;
 
-    if (sBatt < 2400) battColor = redColour;
+    if (sBatt < 2300) battColor = redColour;
     else battColor = greenColour;
 
     snprintf(slimTemp, TEMPSIZE, "%3i.%i", Tslim / 10, abs(Tslim) % 10);
@@ -1057,7 +1184,7 @@ void getAndDisplayTime() {
              day(t), monthShortStr(month(t)), hourFormat12(t), minute(t), (isAM(t)) ? "AM" : "PM", (dst_status) ? DAYLIGHT_TZ_STRING : STANDARD_TZ_STRING);
 
     myScreen.gText(layout.TimeAndDateValue.x, layout.TimeAndDateValue.y, prevTimeAndDate, blackColour);
-    myScreen.gText(layout.TimeAndDateValue.x, layout.TimeAndDateValue.y, timeAndDate);
+    myScreen.gText(layout.TimeAndDateValue.x, layout.TimeAndDateValue.y, timeAndDate, timeColor);
     strncpy(prevTimeAndDate, timeAndDate, TADSIZE);
   } // if (timeStatus() == timeSet)
   // Else timeStatus is not valid, so don't change the display
@@ -1195,12 +1322,17 @@ void displayVFD() {
 void displayOLED() {
   int hist_max = 0;
   int hist_min = 32767;
+  int hist_mid;
+  int hist_delta;
   char p_decimal[3];
 
   for (int i = 0; i < hist_num_entries; i++) {
     if ( p_hist[i] > hist_max) hist_max = p_hist[i];
     if ( p_hist[i] < hist_min) hist_min = p_hist[i];
   }
+
+  hist_mid = (hist_max + hist_min) / 2;
+  hist_delta = hist_max - hist_min;
 
   Serial.print("Min: ");
   Serial.println(hist_min);
@@ -1211,8 +1343,13 @@ void displayOLED() {
   Serial.print("Hist position: ");
   Serial.println(hist_position);
 
+  oled.clear(PAGE);  // Clear the buffer
+
+  // If range is values is < 30 (lines available in display area), then plot the points relative to row 15
+  // If values is >= 30, then use map function to fit the values in display area
   for (int i = 0; i < hist_num_entries; i++) {
-    oled.pixel(i, map(p_hist[(i + hist_position ) % hist_len], hist_min, hist_max, 34, 0));
+    if (hist_delta < 30) oled.pixel(i, 15 - (p_hist[(i + hist_position ) % hist_len] - hist_mid));
+    else oled.pixel(i, map(p_hist[(i + hist_position ) % hist_len], hist_min, hist_max, 34, 0));
   }
 
   if (hist_num_entries > 0) {
@@ -1228,7 +1365,7 @@ void displayOLED() {
     else {
       snprintf(p_decimal, 3, "%.2d", p_hist[(hist_position - 1) % hist_len] % 100);
     }
-    oled.print(p_decimal); 
+    oled.print(p_decimal);
     oled.display();
   }
 } // displayOLED()
@@ -1243,6 +1380,7 @@ time_t getNtpTime()
     int size = Udp.parsePacket();
     if (size >= NTP_PACKET_SIZE) {
       Serial.println("Receive NTP Response");
+      timeColor = whiteColour;
       Udp.read(packetBuffer, NTP_PACKET_SIZE);  // read packet into the buffer
       unsigned long secsSince1900;
       // convert four bytes starting at location 40 to a long integer
@@ -1254,6 +1392,7 @@ time_t getNtpTime()
     }
   }
   Serial.println("No NTP Response :-(");
+  timeColor = blackColour;
   return 0; // return 0 if unable to get the time
 }
 

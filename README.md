@@ -3,7 +3,7 @@ Connected IoT Status Monitor
 
 Energia (Arduino-derived IDE for TI microcontrollers) sketch for a status display of various sensor data readings that are queried from the ThingSpeak IoT Platform.
 
-The sketch is specifically designed for use with the Texas Instruments TM4C1294 [Connected LaunchPad][1], [Kentec Touch Display BoosterPack][2] (SPI version), and the [Futaba 162SD03][9] Vacuum Fluorescent Display.
+The sketch is specifically designed for use with the Texas Instruments TM4C1294 [Connected LaunchPad][1], [Kentec Touch Display BoosterPack][2] (SPI version), [Futaba 162SD03][9] Vacuum Fluorescent Display, and SparkFun [Micro OLED Breakout][12].
 
 While the sketch is written for a specific hardware configuration, it can be used as an example for the following (both on Arduino and Energia platforms):
 - TCP and UDP connections using Ethernet
@@ -13,19 +13,30 @@ While the sketch is written for a specific hardware configuration, it can be use
 - Retrieving NTP time
 - Calculate Standard Time or Daylight Saving Time based on current day/time.
 - Using a simple [photo resistor circuit][7] to detect when a room light is turned on
+- Character Displays
+- Bit-Mapped Displays
 
-Parts of the code are messy and could be improved. However, it does what I want, so they will probably stay as they are. In particular:
-- I tried to come up with a creative solution for defining x/y coordinates for the display items. My solution ended up being a little cumbersome and difficult to maintain if the screen layout needs to change significantly.
+Parts of the code are messy and could be improved. However, the sketch does what I want, so they will probably stay as they are. In particular:
+- I tried to come up with a creative solution for defining x/y coordinates for the display items. My solution ended up being cumbersome and difficult to maintain if the screen layout needs to change significantly.
 - The DST conversion algorithm is optimized for U.S. time zones. It is not generalized for all time zone/DST cases.
 
 ## Light Detector Circuit ##
-This display is located in a windowless workshop, and I only want  the board querying the sensors database when I am in the workshop -- which is essentially any time the room light is on. In addition, the LCD backlight and VFD draw about 400 mA (out of a total 540 mA), so I want to minimize power usage when I'm not in the workshop. I constructed a simple circuit using a 10K resistor and a cheap photo resistor (which probably came from an Arduino starter kit). The 10K and photo resistors are wired in series, with the 10K pulled to Vcc and the photo resistor connected to ground. Analog Pin A19 reads the voltage at the 10K/photo resistor connection (a simple voltage divider). Since it is just checking for a dark room vs. a lighted room, a threshold of half the ADC range is used.
+This display is located in a windowless workshop, and I only want the board querying the sensors database when I am in the workshop -- which is essentially any time the room light is on. In addition, the LCD backlight and VFD draw about 400 mA (out of a total 540 mA for the full device), so I want to minimize power usage when I'm not in the workshop.
 
-## Vacuum Fluorescent Display
+I constructed a simple light detection circuit using a 10K resistor and a cheap photo resistor (which probably came from an Arduino starter kit). The 10K and photo resistors are wired in series, with the 10K pulled to Vcc and the photo resistor connected to ground. Analog Pin A19 reads the voltage at the 10K/photo resistor connection (a simple voltage divider). Since it is just checking for a dark room vs. a lighted room, a threshold of half the ADC range is used.
+
+## Vacuum Fluorescent Display ##
 The [Futaba VFD][9] is enabled by a power control circuit with a logic-level MOSFET along with a [CD40109][11] tri-state buffer for the control signals to the VFD. The CLK, DATA, and RESET signals to the VFD are only active when the VFD is powered.
 
+## SparkFun Micro OLED Display ##
+The [SparkFun Micro OLED][12] is used to display the atmospheric pressure history. The past 64 readings are displayed graphically to show the pressure trend to predict the weather.
+
+A modified version of the SparkFun Micro OLED [library][13] is required to work with Energia (MSP or Tiva controllers).
+
+The OLED is controlled using parallel-8080 mode. While the OLED also supports SPI and I2C serial control, the Energia Tiva SPI implementation is incompatible with the SparkFun library. I was also unable to get I2C mode to work on the TM4c129 LaunchPad and decided to use parallel mode since I had enough I/O available. 
+
 ## Ethernet Status LEDs ##
-The Connected LaunchPad supports Ethernet Link (LED4) and Activity (LED3) status indicators. However, I find these LEDs are bright and distracting. The sketch disables them by default. If you want to enable them, hold down PUSH1 (labeled "USR_SW1" on the board's silkscreen) during reset.
+The Connected LaunchPad supports Ethernet Link (LED4) and Activity (LED3) status indicators. However, I find these LEDs are bright and distracting. They are disabled by default. The code to enable them is in the sketch, but is commented out.
 
 ## Kentec Display Library ##
 The [LCD display][2] requires the Screen_K35_SPI library. This library is included in the MSP430 board package with Energia, but not in the Tiva boards package. The MSP430 version of the library requires some minor modifications to work with the TM4C1294 LauchPad. These steps need to be performed any time you upgrade Energia or the Tiva boards package version.
@@ -63,6 +74,7 @@ Note that these directions are Windows-specific. Mac and Linux instructions are 
 * [Arduino Time Library][5]
 * [FutabaUsVfd Library][8]
     * This is an updated version of the library available on [Arduino Playground][10]
+* Modified SparkFun Micro OLED [Library][13]
 
 ## References ##
 * Texas Instruments TM4C1294 Connected LaunchPad [EK-TM4C1294XL][1]
@@ -73,6 +85,7 @@ Note that these directions are Windows-specific. Mac and Linux instructions are 
 * ThingsSpeak REST API [documentation][4]
 * Arduino Playground photo resistor [tutorial][7]
 * Arduino Playground [FutabaUsVfd][10]
+* SparkFun Micro OLED [Breakout][12]
 
 [1]: http://www.ti.com/tool/EK-TM4C1294XL
 [2]: http://www.ti.com/tool/boostxl-k350qvg-s1
@@ -85,3 +98,5 @@ Note that these directions are Windows-specific. Mac and Linux instructions are 
 [9]: https://www.allelectronics.com/mas_assets/media/allelectronics2018/spec/VFD-162.pdf
 [10]: https://playground.arduino.cc/Main/FutabaUsVfd/
 [11]: https://www.ti.com/lit/ds/symlink/cd40109b.pdf
+[12]: https://www.sparkfun.com/products/13003
+[13]: https://github.com/Andy4495/SparkFun_Micro_OLED_Arduino_Library
