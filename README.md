@@ -33,7 +33,7 @@ The [SparkFun Micro OLED][12] is used to display the atmospheric pressure histor
 
 A modified version of the SparkFun Micro OLED [library][13] is required to work with Energia (MSP or Tiva controllers).
 
-The OLED is controlled using parallel-8080 mode. While the OLED also supports SPI and I2C serial control, the Energia Tiva SPI implementation is incompatible with the SparkFun library. I was also unable to get I2C mode to work on the TM4c129 LaunchPad and decided to use parallel mode since I had enough I/O available. 
+The OLED is controlled using parallel-8080 mode. While the OLED also supports SPI and I2C serial control, the Energia Tiva SPI implementation is incompatible with the SparkFun library. I was also unable to get I2C mode to work on the TM4c129 LaunchPad and decided to use parallel mode since I had enough I/O available.
 
 ## Ethernet Status LEDs ##
 The Connected LaunchPad supports Ethernet Link (LED4) and Activity (LED3) status indicators. However, I find these LEDs are bright and distracting. They are disabled by default. The code to enable them is in the sketch, but is commented out.
@@ -86,6 +86,7 @@ Note that these directions are Windows-specific. Mac and Linux instructions are 
 * Arduino Playground photo resistor [tutorial][7]
 * Arduino Playground [FutabaUsVfd][10]
 * SparkFun Micro OLED [Breakout][12]
+* [Interface Board][14] containing system power, VFD power control, and ambient light sensor circuit
 
 [1]: http://www.ti.com/tool/EK-TM4C1294XL
 [2]: http://www.ti.com/tool/boostxl-k350qvg-s1
@@ -100,3 +101,4 @@ Note that these directions are Windows-specific. Mac and Linux instructions are 
 [11]: https://www.ti.com/lit/ds/symlink/cd40109b.pdf
 [12]: https://www.sparkfun.com/products/13003
 [13]: https://github.com/Andy4495/SparkFun_Micro_OLED_Arduino_Library
+[14]: hardware/README.md
