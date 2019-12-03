@@ -58,8 +58,8 @@ References
 - [CD40109][4] Buffer/Level-Shifter
 - Arduino Playground photo resistor [tutorial][5]
 
-[1]: ./Interface-Board-Schematic.jpg
-[2]: ./Interface-Board-Pic.jpg
+[1]: ./Interface-Board-Schematic.JPG
+[2]: ./Interface-Board-Pic.JPG
 [3]: https://www.allelectronics.com/mas_assets/media/allelectronics2018/spec/VFD-162.pdf
 [4]: https://www.ti.com/lit/ds/symlink/cd40109b.pdf
 [5]: https://playground.arduino.cc/Learning/PhotoResistor
