@@ -40,7 +40,8 @@
                       -- Query ThingSpeak for pressure data even when display is off
                     - Don't display time if no response/invalid response from time server
                     - Updated low battery thresholds
-                    - Remove check for PUSH1 -- ethernet status LEDs always disabled. 
+                    - Remove check for PUSH1 -- ethernet status LEDs always disabled.
+  01/19/2020 - A.T. - Fix a case where invalid time needs to be cleared from display.
 
   *** IMPORTANT ***
     The Kentec_35_SPI library has an issue where the _getRawTouch() function called in the begin() method
@@ -1187,7 +1188,9 @@ void getAndDisplayTime() {
     myScreen.gText(layout.TimeAndDateValue.x, layout.TimeAndDateValue.y, timeAndDate, timeColor);
     strncpy(prevTimeAndDate, timeAndDate, TADSIZE);
   } // if (timeStatus() == timeSet)
-  // Else timeStatus is not valid, so don't change the display
+  else { // timeStatus is not valid, so clear the time display
+    myScreen.gText(layout.TimeAndDateValue.x, layout.TimeAndDateValue.y, prevTimeAndDate, blackColour);
+  }
 } // getAndDisplayTime()
 
 void displayStartup() {
