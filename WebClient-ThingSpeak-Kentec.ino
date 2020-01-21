@@ -42,6 +42,7 @@
                     - Updated low battery thresholds
                     - Remove check for PUSH1 -- ethernet status LEDs always disabled.
   01/19/2020 - A.T. - Fix a case where invalid time needs to be cleared from display.
+  01/21/2020 - A.T. - Change LiPo low battery threshold to 3.75V
 
   *** IMPORTANT ***
     The Kentec_35_SPI library has an issue where the _getRawTouch() function called in the begin() method
@@ -165,7 +166,7 @@ char garageTime[TIMESIZE];
 #define LIGHTS_OFF_SLEEP_TIME    5000
 #define BACKLIGHT_PIN              40
 #define SLEEPING_STATUS_LED      PN_1    // Flash when display backlight is off to show the unit is active
-#define LIPO_LO_BATT_LEVEL       3800
+#define LIPO_LO_BATT_LEVEL       3750
 #define LIPO_LO_TIME_REMAIN   2*60*24    // Set red display if Fuel Tank thinks there is < 2 days left
 
 // VFD support
