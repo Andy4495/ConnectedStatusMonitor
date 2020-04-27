@@ -43,6 +43,9 @@
                     - Remove check for PUSH1 -- ethernet status LEDs always disabled.
   01/19/2020 - A.T. - Fix a case where invalid time needs to be cleared from display.
   01/21/2020 - A.T. - Change LiPo low battery threshold to 3.75V
+  02/13/2020 - A.T. - Update to use new Futaba VFD library naming.
+  04/27/2020 - A.T. - Change lipo time remaining threshold to zero, since the value does not seem
+                      to correlate with reality in this application. Tweaked the lipo battery voltage threshold. 
 
   *** IMPORTANT ***
     The Kentec_35_SPI library has an issue where the _getRawTouch() function called in the begin() method
@@ -166,18 +169,18 @@ char garageTime[TIMESIZE];
 #define LIGHTS_OFF_SLEEP_TIME    5000
 #define BACKLIGHT_PIN              40
 #define SLEEPING_STATUS_LED      PN_1    // Flash when display backlight is off to show the unit is active
-#define LIPO_LO_BATT_LEVEL       3750
-#define LIPO_LO_TIME_REMAIN   2*60*24    // Set red display if Fuel Tank thinks there is < 2 days left
+#define LIPO_LO_BATT_LEVEL       3780   // There are still a few days left at this level. 
+#define LIPO_LO_TIME_REMAIN         0   // Value reported by Fuel Gauge drops too quickly. Setting to zero effectively disables this check. 
 
 // VFD support
-#include <FutabaUsVfd.h>
+#include <FutabaVFD162S.h>
 #define VFD_CLOCK_PIN              74
 #define VFD_DATA_PIN               73
 #define VFD_RESET_PIN              72
 #define VFD_BUFFER_EN              76    // Controls the EN pins on the CD40109 buffer
 #define VFD_POWER_CONTROL          77    // HIGH == OFF
 #define VFD_BRIGHTNESS            128
-FutabaUsVfd vfd(VFD_CLOCK_PIN, VFD_DATA_PIN, VFD_RESET_PIN);
+FutabaVFD162S vfd(VFD_CLOCK_PIN, VFD_DATA_PIN, VFD_RESET_PIN);
 int vfd_loop_counter = 0; // Used for testing
 
 // SparkFun OLED support
@@ -805,7 +808,7 @@ void getAndDisplaySensor5() {
 
     long T5 = strtol(feeds0["field1"], NULL, 10);
     long B5 = strtol(feeds0["field2"], NULL, 10);
-    long remain5 = strtol(feeds0["field4"], NULL, 10);
+    unsigned long remain5 = strtoul(feeds0["field4"], NULL, 10);
     strncpy(sensor5Time, feeds0_created_at, TIMESIZE - 1);
     sensor5Time[TIMESIZE - 1] = '\0';                         // hard-code a null terminator at end of string
 
@@ -1281,7 +1284,7 @@ void vfdOn() {
   delay(5);
 
   // Configure VFD after coming out of reset
-  vfd.writeCharacterDirect(FutabaUsVfd::SET_INPUT_OUTPUT_MODE_CHARACTER);
+  vfd.writeCharacterDirect(FutabaVFD162S::SET_INPUT_OUTPUT_MODE_CHARACTER);
   vfd.writeCharacterDirect(0x01);  // I/O Mode 1: Unidirectional (no handshake)
   vfd.clear();
   vfd.setBrightness(VFD_BRIGHTNESS);
