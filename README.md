@@ -1,7 +1,7 @@
 Connected IoT Status Monitor
 ============================
 
-Energia (Arduino-derived IDE for TI microcontrollers) sketch for a status display of various sensor data readings that are queried from the ThingSpeak IoT Platform.
+Energia (Arduino-derived IDE for TI microcontrollers) sketch for a status display of various sensor data readings that are queried from the [ThingSpeak][6] IoT Platform.
 
 The sketch is specifically designed for use with the Texas Instruments TM4C1294 [Connected LaunchPad][1], [Kentec Touch Display BoosterPack][2] (SPI version), [Futaba 162SD03][9] Vacuum Fluorescent Display, and SparkFun [Micro OLED Breakout][12].
 
@@ -21,7 +21,7 @@ Parts of the code are messy and could be improved. However, the sketch does what
 - The DST conversion algorithm is optimized for U.S. time zones. It is not generalized for all time zone/DST cases.
 
 ## Light Detector Circuit ##
-This display is located in a windowless workshop, and I only want the board querying the sensors database when I am in the workshop -- which is essentially any time the room light is on. In addition, the LCD backlight and VFD draw about 400 mA (out of a total 540 mA for the full device), so I want to minimize power usage when I'm not in the workshop.
+This display is located in a windowless workshop, and I only want the board querying the sensors database when I am in the workshop -- which is essentially any time the room light is on. In addition, the LCD backlight and VFD draw about 400 mA (out of a total 540 mA for the full setup), so I want to minimize power usage when I'm not in the workshop.
 
 I constructed a simple light detection circuit using a 10K resistor and a cheap photo resistor (which probably came from an Arduino starter kit). The 10K and photo resistors are wired in series, with the 10K pulled to Vcc and the photo resistor connected to ground. Analog Pin A19 reads the voltage at the 10K/photo resistor connection (a simple voltage divider). Since it is just checking for a dark room vs. a lighted room, a threshold of half the ADC range is used.
 
@@ -64,15 +64,15 @@ Note that these directions are Windows-specific. Mac and Linux instructions are 
     This keeps the IDE from complaining about a posssible incompatible library.
 
 5. In the file `Screen_K35_SPI.cpp`, comment out the `_getRawTouch()` function call in the `begin()` method:
-
+```
         //    _getRawTouch(x0, y0, z0);
-
+```
     The library has an issue where this function can get stuck in an endless loop.
 
 ## External Libraries ##
 * [ArduinoJson][3]
 * [Arduino Time Library][5]
-* [FutabaUsVfd Library][8]
+* [FutabaUsVfd162S Library][8]
     * This is an updated version of the library available on [Arduino Playground][10]
 * Modified SparkFun Micro OLED [Library][13]
 
@@ -84,7 +84,6 @@ Note that these directions are Windows-specific. Mac and Linux instructions are 
 * ThingsSpeak [IoT platform][6]
 * ThingsSpeak REST API [documentation][4]
 * Arduino Playground photo resistor [tutorial][7]
-* Arduino Playground [FutabaUsVfd][10]
 * SparkFun Micro OLED [Breakout][12]
 * [Interface Board][14] containing system power, VFD power control, and ambient light sensor circuit
 
@@ -95,7 +94,7 @@ Note that these directions are Windows-specific. Mac and Linux instructions are 
 [5]: https://github.com/PaulStoffregen/Time
 [6]: https://thingspeak.com/
 [7]: https://playground.arduino.cc/Learning/PhotoResistor
-[8]: https://github.com/Andy4495/FutabaUsVfd
+[8]: https://github.com/Andy4495/FutabaVFD162S
 [9]: https://www.allelectronics.com/mas_assets/media/allelectronics2018/spec/VFD-162.pdf
 [10]: https://playground.arduino.cc/Main/FutabaUsVfd/
 [11]: https://www.ti.com/lit/ds/symlink/cd40109b.pdf

@@ -15,7 +15,7 @@ I buffer the VFD logic signals with a CD40109 tri-state level shifter. I am main
 
 Ambient Light Sensor
 --------------------
-The board contaians a simple [light detection circuit][5] using a 10K resistor and a cheap photo resistor. The 10K and photo resistors are wired in series, with the photo resistor pulled to Vcc and the 10K resistor connected to ground. Analog Pin A19 reads the voltage at the 10K/photo resistor connection (a simple voltage divider).
+The board contains a simple [light detection circuit][5] using a 10K resistor and a cheap photo resistor. The 10K and photo resistors are wired in series, with the photo resistor pulled to Vcc and the 10K resistor connected to ground. Analog Pin A19 reads the voltage at the 10K/photo resistor connection (a simple voltage divider).
 
 Signal and Power Connections
 ----------------------------
