@@ -45,8 +45,9 @@
   01/21/2020 - A.T. - Change LiPo low battery threshold to 3.75V
   02/13/2020 - A.T. - Update to use new Futaba VFD library naming.
   04/27/2020 - A.T. - Change lipo time remaining threshold to zero, since the value does not seem
-                      to correlate with reality in this application. Tweaked the lipo battery voltage threshold. 
-
+                      to correlate with reality in this application. Tweaked the lipo battery voltage threshold.
+  09/01/2020 - A.T. - Add support for turtle pond temperature. Rename "Pond" to "Fish" to distinguish the two sensors. 
+  
   *** IMPORTANT ***
     The Kentec_35_SPI library has an issue where the _getRawTouch() function called in the begin() method
     can get stuck in an endless loop. Therefore, for proper operation of the display, it is necessary to
@@ -139,8 +140,10 @@ char outdoorP[PSIZE];
 char prevOutdoorP[PSIZE];
 char slimTemp[TEMPSIZE];
 char prevSlimTemp[TEMPSIZE];
-char pondTemp[TEMPSIZE];
-char prevPondTemp[TEMPSIZE];
+char fishTemp[TEMPSIZE];
+char prevFishTemp[TEMPSIZE];
+char turtleTemp[TEMPSIZE];
+char prevTurtleTemp[TEMPSIZE];
 char sensor5Temp[TEMPSIZE];
 char prevSensor5Temp[TEMPSIZE];
 char workshopTemp[TEMPSIZE];
@@ -169,8 +172,8 @@ char garageTime[TIMESIZE];
 #define LIGHTS_OFF_SLEEP_TIME    5000
 #define BACKLIGHT_PIN              40
 #define SLEEPING_STATUS_LED      PN_1    // Flash when display backlight is off to show the unit is active
-#define LIPO_LO_BATT_LEVEL       3780   // There are still a few days left at this level. 
-#define LIPO_LO_TIME_REMAIN         0   // Value reported by Fuel Gauge drops too quickly. Setting to zero effectively disables this check. 
+#define LIPO_LO_BATT_LEVEL       3780   // There are still a few days left at this level.
+#define LIPO_LO_TIME_REMAIN         0   // Value reported by Fuel Gauge drops too quickly. Setting to zero effectively disables this check.
 
 // VFD support
 #include <FutabaVFD162S.h>
@@ -282,7 +285,8 @@ void setup() {
   prevOutdoorP[0] = 0;
   prevSlimTemp[0] = 0;
   prevWorkshopTemp[0] = 0;
-  prevPondTemp[0] = 0;
+  prevFishTemp[0] = 0;
+  prevTurtleTemp[0] = 0;
   prevGarageDoor[0] = 0;
   prevOutdoorBatt[0] = 0;
   prevSlimBatt[0] = 0;
@@ -991,7 +995,9 @@ void getAndDisplayPond() {
     const char* feeds0_created_at = feeds0["created_at"]; // "2018-06-10T22:26:23Z"
     long feeds0_entry_id = feeds0["entry_id"]; // 90649
 
-    long pondWaterT = strtol(feeds0["field2"], NULL, 10);
+    long fishWaterT = strtol(feeds0["field2"], NULL, 10);
+    // The Turtle Pond temp sensor is stored in "field1" which was originally designed as the "Air Temp" value
+    long turtleWaterT = strtol(feeds0["field1"], NULL, 10);
     long pondmV = strtol(feeds0["field3"], NULL, 10);
     strncpy(pondTime, feeds0_created_at, TIMESIZE - 1);
     pondTime[TIMESIZE - 1] = '\0';                         // hard-code a null terminator at end of string
@@ -1002,18 +1008,23 @@ void getAndDisplayPond() {
     Serial.print("Entry ID: ");
     Serial.println(feeds0_entry_id);
 
-    snprintf(pondTemp, TEMPSIZE, "%3i.%i", pondWaterT / 10, abs(pondWaterT) % 10);
+    snprintf(fishTemp, TEMPSIZE, "%3i.%i", fishWaterT / 10, abs(fishWaterT) % 10);
+    snprintf(turtleTemp, TEMPSIZE, "%3i.%i", turtleWaterT / 10, abs(turtleWaterT) % 10);
   }
   else
   {
     Serial.println("JSON parse failed.");
-    snprintf(pondTemp, TEMPSIZE, "  N/A");
+    snprintf(fishTemp, TEMPSIZE, "  N/A");
+    snprintf(turtleTemp, TEMPSIZE, "  N/A");
     strcpy(pondTime, "     N/A");
   }
 
-  myScreen.gText(layout.PondTempValue.x, layout.PondTempValue.y, prevPondTemp, blackColour);
-  myScreen.gText(layout.PondTempValue.x, layout.PondTempValue.y, pondTemp);
-  strncpy(prevPondTemp, pondTemp, TEMPSIZE);
+  myScreen.gText(layout.FishTempValue.x, layout.FishTempValue.y, prevFishTemp, blackColour);
+  myScreen.gText(layout.FishTempValue.x, layout.FishTempValue.y, fishTemp);
+  strncpy(prevFishTemp, fishTemp, TEMPSIZE);
+  myScreen.gText(layout.TurtleTempValue.x, layout.TurtleTempValue.y, prevTurtleTemp, blackColour);
+  myScreen.gText(layout.TurtleTempValue.x, layout.TurtleTempValue.y, turtleTemp);
+  strncpy(prevTurtleTemp, turtleTemp, TEMPSIZE);
 
 } // getAndDisplayPond()
 
@@ -1226,8 +1237,10 @@ void displayTitles() {
   myScreen.gText(layout.Sensor5TempUnits.x, layout.Sensor5TempUnits.y, DegreesF);
   myScreen.gText(layout.WorkshopTitle.x, layout.WorkshopTitle.y, WorkshopTitle);
   myScreen.gText(layout.WorkshopTempUnits.x, layout.WorkshopTempUnits.y, DegreesF);
-  myScreen.gText(layout.PondTitle.x, layout.PondTitle.y, PondTitle);
-  myScreen.gText(layout.PondTempUnits.x, layout.PondTempUnits.y, DegreesF);
+  myScreen.gText(layout.FishTitle.x, layout.FishTitle.y, FishTitle);
+  myScreen.gText(layout.FishTempUnits.x, layout.FishTempUnits.y, DegreesF);
+  myScreen.gText(layout.TurtleTitle.x, layout.TurtleTitle.y, TurtleTitle);
+  myScreen.gText(layout.TurtleTempUnits.x, layout.TurtleTempUnits.y, DegreesF);
   myScreen.gText(layout.GDTitle.x, layout.GDTitle.y, GDTitle);
   myScreen.gText(layout.BattTitle.x, layout.BattTitle.y, BatteriesTitle);
   myScreen.gText(layout.BattOutdoorSubtitle.x, layout.BattOutdoorSubtitle.y, OutdoorSubtitle);

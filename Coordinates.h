@@ -20,9 +20,12 @@ struct Layout {
   Coord Sensor5Title;
   Coord Sensor5TempValue;
   Coord Sensor5TempUnits;
-  Coord PondTitle;
-  Coord PondTempValue;
-  Coord PondTempUnits;
+  Coord FishTitle;
+  Coord FishTempValue;
+  Coord FishTempUnits;
+  Coord TurtleTitle;
+  Coord TurtleTempValue;
+  Coord TurtleTempUnits;
   Coord WorkshopTitle;
   Coord WorkshopLoBat;
   Coord WorkshopTempValue;
@@ -46,8 +49,9 @@ struct Layout {
 const char WeatherTitle[]     = "Weather";
 const char SlimTitle[]        = "Slim";
 const char Sensor5Title[]     = "Gargoyle";
-const char PondTitle[]        = "Pond";
-const char WorkshopTitle[]    = "Workshop"; 
+const char FishTitle[]        = "Fish";
+const char TurtleTitle[]      = "Turtles";
+const char WorkshopTitle[]    = "Workshop";
 const char WorkshopLoBat[]    = "LoBat";
 const char GDTitle[]          = "Garage Door";
 const char BatteriesTitle[]   = "Batteries";
@@ -59,7 +63,8 @@ const char inHG[]             = "inHg";
 const char V[]                = "V";
 const char OutdoorSubtitle[]  = "Outdoor:";
 const char SlimSubtitle[]     = "Slim:";
-const char PondSubtitle[]     = "Pond:";
+const char FishSubtitle[]     = "Fish:";
+const char TurtleSubtitle[]   = "Turtles:";
 const char Sensor5Subtitle[]  = "Gargoyle:";
 
 #define FONT_SIZE_X           12
@@ -99,50 +104,53 @@ Layout::Layout() {
   Sensor5TempValue.y =     112;
   Sensor5TempUnits.x =     215;
   Sensor5TempUnits.y =     112;
-  PondTitle.x =              0;  // Centered = 96
-  PondTitle.y =            136;
-  PondTempValue.x =        143;  // "100.1 " -> 6 chars * 12 = 72 -> 215 - 72 = 143
-  PondTempValue.y =        136;
-  PondTempUnits.x =        215;
-  PondTempUnits.y =        136;
+  FishTitle.x =              0;  // Centered = 96
+  FishTitle.y =            136;
+  FishTempValue.x =        143;  // "100.1 " -> 6 chars * 12 = 72 -> 215 - 72 = 143
+  FishTempValue.y =        136;
+  FishTempUnits.x =        215;
+  FishTempUnits.y =        136;
+  TurtleTitle.x =            0;  // Centered = 96
+  TurtleTitle.y =          160;
+  TurtleTempValue.x =      143;
+  TurtleTempValue.y =      160;
+  TurtleTempUnits.x =      215;
+  TurtleTempUnits.y =      160;
   WorkshopTitle.x =          0;
-  WorkshopTitle.y =        160;
+  WorkshopTitle.y =        184;
   WorkshopLoBat.x =         96;
-  WorkshopLoBat.y =        160;
+  WorkshopLoBat.y =        184;
   WorkshopTempValue.x =    143;
-  WorkshopTempValue.y =    160;
+  WorkshopTempValue.y =    184;
   WorkshopTempUnits.x =    215;
-  WorkshopTempUnits.y =    160;
+  WorkshopTempUnits.y =    184;
   GDTitle.x =                0;  // Centered = 54
-  GDTitle.y =              184;
+  GDTitle.y =              208;
   GDValue.x =              167;  // "Closed" -> 6 chars * 12 = 72 -> 239 - 72 = 167
-  GDValue.y =              184;
+  GDValue.y =              208;
   BattTitle.x =              0;  // Centered = 66
-  BattTitle.y =            208;
+  BattTitle.y =            232;
   BattOutdoorSubtitle.x =   24;
-  BattOutdoorSubtitle.y =  224;
+  BattOutdoorSubtitle.y =  248;
   BattOutdoorValue.x =     155;  // "3.123 " -> 6 chars * 12 = 72 -> 227 - 72 = 155
-  BattOutdoorValue.y =     224;
+  BattOutdoorValue.y =     248;
   BattOutdoorUnits.x =     227;
-  BattOutdoorUnits.y =     224;
+  BattOutdoorUnits.y =     248;
   BattSlimSubtitle.x =      24;
-  BattSlimSubtitle.y =     240;
+  BattSlimSubtitle.y =     264;
   BattSlimValue.x =        155;  // "3.123 " -> 6 chars * 12 = 72 -> 227 - 72 = 155
-  BattSlimValue.y =        240;
+  BattSlimValue.y =        264;
   BattSlimUnits.x =        227;
-  BattSlimUnits.y =        240;
+  BattSlimUnits.y =        264;
   BattSensor5Subtitle.x =   24;
-  BattSensor5Subtitle.y =  256;
+  BattSensor5Subtitle.y =  280;
   BattSensor5Value.x =     155;  // "3.123 " -> 6 chars * 12 = 72 -> 227 - 72 = 155
-  BattSensor5Value.y =     256;
+  BattSensor5Value.y =     280;
   BattSensor5Units.x =     227;
-  BattSensor5Units.y =     256;
+  BattSensor5Units.y =     280;
   TimeAndDateTitle.x =       0;  // Centered = 42
-  TimeAndDateTitle.y =     270;
+  TimeAndDateTitle.y =       0;  // Time and Date title is no longer printed, XY values do not matter
   TimeAndDateValue.x =       5;  // "14-Jun hh:mm AM CDT" -> 19 chars * 12 = 228 -> 239 - 228 = 11 to Right Justify
   // Otherewise, use 11/2 = 5 to Center
   TimeAndDateValue.y =     304;  // If displaying Time and Date header, then use y value of at least 272
-  // With no header, y-value of :
-  //                 256 displays time and date in the next line under batteries section
-  //                 304 displays time and date on last line of display
 }
