@@ -48,7 +48,7 @@ struct Layout {
 
 const char WeatherTitle[]     = "Weather";
 const char SlimTitle[]        = "Slim";
-const char Sensor5Title[]     = "Gargoyle";
+const char Sensor5Title[]     = "Sensor 5";
 const char FishTitle[]        = "Fish";
 const char TurtleTitle[]      = "Turtles";
 const char WorkshopTitle[]    = "Workshop";
@@ -65,7 +65,7 @@ const char OutdoorSubtitle[]  = "Outdoor:";
 const char SlimSubtitle[]     = "Slim:";
 const char FishSubtitle[]     = "Fish:";
 const char TurtleSubtitle[]   = "Turtles:";
-const char Sensor5Subtitle[]  = "Gargoyle:";
+const char Sensor5Subtitle[]  = "Sensor 5:";
 
 #define FONT_SIZE_X           12
 #define FONT_SIZE_Y           16

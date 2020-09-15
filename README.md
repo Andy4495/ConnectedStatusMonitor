@@ -67,7 +67,8 @@ Note that these directions are Windows-specific. Mac and Linux instructions are 
 ```
         //    _getRawTouch(x0, y0, z0);
 ```
-    The library has an issue where this function can get stuck in an endless loop.
+
+  The library has an issue where this function can get stuck in an endless loop.
 
 ## External Libraries ##
 * [ArduinoJson][3]

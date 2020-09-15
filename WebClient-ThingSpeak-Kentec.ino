@@ -46,8 +46,9 @@
   02/13/2020 - A.T. - Update to use new Futaba VFD library naming.
   04/27/2020 - A.T. - Change lipo time remaining threshold to zero, since the value does not seem
                       to correlate with reality in this application. Tweaked the lipo battery voltage threshold.
-  09/01/2020 - A.T. - Add support for turtle pond temperature. Rename "Pond" to "Fish" to distinguish the two sensors. 
-  
+  09/01/2020 - A.T. - Add support for turtle pond temperature. Rename "Pond" to "Fish" to distinguish the two sensors.
+  09/14/2020 - A.T. - Change "Gargoyle" to "Sensor5"
+
   *** IMPORTANT ***
     The Kentec_35_SPI library has an issue where the _getRawTouch() function called in the begin() method
     can get stuck in an endless loop. Therefore, for proper operation of the display, it is necessary to
@@ -789,8 +790,8 @@ void getAndDisplaySensor5() {
 
     JsonObject& channel = root["channel"];
     long channel_id = channel["id"]; // 412284
-    const char* channel_name = channel["name"]; // "Indoor Temp 5 - Gargoyle"
-    const char* channel_description = channel["description"]; // "Indoor Temp Sensor #5 - Gargoyle"
+    const char* channel_name = channel["name"]; // "Indoor Temp 5"
+    const char* channel_description = channel["description"]; // "Indoor Temp Sensor #5"
     const char* channel_latitude = channel["latitude"]; // "0.0"
     const char* channel_longitude = channel["longitude"]; // "0.0"
     const char* channel_field1 = channel["field1"]; // "Temp"
@@ -1318,7 +1319,7 @@ void displayVFD() {
   vfd.print(slimTime + 5);
   delay(DISPLAY_DELAY);
   vfd.clear();
-  vfd.print("Gargoyle: ");
+  vfd.print("Sensor 5: ");
   vfd.setCursor(0, 1);        // Line 2
   vfd.print(sensor5Time + 5);
   delay(DISPLAY_DELAY);
