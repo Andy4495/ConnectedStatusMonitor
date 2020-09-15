@@ -72,6 +72,22 @@ Note that these directions are Windows-specific. Mac and Linux instructions are 
 
   The library has an issue where this function can get stuck in an endless loop.
 
+6. In the file `Screen_K35_SPI.cpp`, change the following in the begin() method from:
+```
+    analogWrite(_pinScreenBackLight, 127);
+```
+To:
+```
+#if defined(__TM4C1294NCPDT__)
+    digitalWrite(_pinScreenBackLight, HIGH);
+#warning Connected LaunchPad platform backlight control
+#else
+    analogWrite(_pinScreenBackLight, 127);
+#endif
+```
+
+  This is needed because the pin that I have connected to the LCDs backlight control is a digital-only pin and does not support PWM. 
+
 ## External Libraries ##
 * [ArduinoJson][3]
 * [Arduino Time Library][5]
