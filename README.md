@@ -39,11 +39,12 @@ The OLED is controlled using parallel-8080 mode. While the OLED also supports SP
 The Connected LaunchPad supports Ethernet Link (LED4) and Activity (LED3) status indicators. However, I find these LEDs are bright and distracting. They are disabled by default. The code to enable them is in the sketch, but is commented out.
 
 ## Kentec Display Library ##
-The [LCD display][2] requires the Screen_K35_SPI library. This library is included in the MSP430 board package with Energia, but not in the Tiva boards package. The MSP430 version of the library requires some minor modifications to work with the TM4C1294 LauchPad. These steps need to be performed any time you upgrade Energia or the Tiva boards package version.
+The [LCD display][2] requires the Screen_K35_SPI library. This library is included in the MSP430 boards package with Energia, but not included in the Tiva boards package until version 1.0.4. The library requires some minor modifications to work with the TM4C1294 LauchPad. These steps need to be performed any time you upgrade Energia or the Tiva boards package version.
 
 Note that these directions are Windows-specific. Mac and Linux instructions are left as an exercise to the reader.
 
-1. Copy the directory `Kentec_35_SPI` from `<Energia Install Directory>\energia-1.8.7E21\hardware\energia\msp430\libraries` to `~\AppData\Local\Energia15\packages\energia\hardware\tivac\1.0.3\libraries`
+1. If you are using Tiva boards package version 1.0.3 or earlier, copy the directory `Kentec_35_SPI` from `<Energia Install Directory>\energia-1.8.7E21\hardware\energia\msp430\libraries` to `~\AppData\Local\Energia15\packages\energia\hardware\tivac\1.0.3\libraries`
+- This step is not needed if you are running Tiva boards package 1.0.4 or later.
 
 2. In file `LCD_screen_font.h`, add the following to the end of line 48:
 
@@ -62,6 +63,7 @@ Note that these directions are Windows-specific. Mac and Linux instructions are 
         ,tivac
 
     This keeps the IDE from complaining about a posssible incompatible library.
+- This step is not needed if you are running Tiva boards package version 1.0.4 or later.
 
 5. In the file `Screen_K35_SPI.cpp`, comment out the `_getRawTouch()` function call in the `begin()` method:
 ```
