@@ -48,6 +48,7 @@
                       to correlate with reality in this application. Tweaked the lipo battery voltage threshold.
   09/01/2020 - A.T. - Add support for turtle pond temperature. Rename "Pond" to "Fish" to distinguish the two sensors.
   09/14/2020 - A.T. - Change "Gargoyle" to "Sensor5"
+  02/03/2021 - A.T. - Add a check for zero pressure value.
 
   *** IMPORTANT ***
     The Kentec_35_SPI library has an issue where the _getRawTouch() function called in the begin() method
@@ -498,14 +499,16 @@ void getAndDisplayWeather() {
 
     if (feeds0_entry_id != last_weather_entry_id) {
       last_weather_entry_id = feeds0_entry_id;
-      if (hist_num_entries < hist_len)  // If we haven't filled the buffer the first time after reset
-      {
-        p_hist[hist_num_entries++] = p;
-      }
-      else // Once buffer has filled, then use a circular buffer and track current postion with wraparound
-      {
-        p_hist[hist_position++] = p;
-        if (hist_position == hist_len) hist_position = 0; // Wrap around if needed.
+      if (p != 0) {
+        if (hist_num_entries < hist_len)  // If we haven't filled the buffer the first time after reset
+        {
+          p_hist[hist_num_entries++] = p;
+        }
+        else // Once buffer has filled, then use a circular buffer and track current postion with wraparound
+        {
+          p_hist[hist_position++] = p;
+          if (hist_position >= hist_len) hist_position = 0; // Wrap around if needed.
+        }
       }
     }
   }
@@ -617,14 +620,16 @@ void getPressure() {
 
     if (feeds0_entry_id != last_weather_entry_id) {
       last_weather_entry_id = feeds0_entry_id;
-      if (hist_num_entries < hist_len)  // If we haven't filled the buffer the first time after reset
-      {
-        p_hist[hist_num_entries++] = p;
-      }
-      else // Once buffer has filled, then use a circular buffer and track current postion with wraparound
-      {
-        p_hist[hist_position++] = p;
-        if (hist_position == hist_len) hist_position = 0; // Wrap around if needed.
+      if (p != 0 ) {
+        if (hist_num_entries < hist_len)  // If we haven't filled the buffer the first time after reset
+        {
+          p_hist[hist_num_entries++] = p;
+        }
+        else // Once buffer has filled, then use a circular buffer and track current postion with wraparound
+        {
+          p_hist[hist_position++] = p;
+          if (hist_position >= hist_len) hist_position = 0; // Wrap around if needed.
+        }
       }
     }
     Serial.print("hist_num_entries: ");
