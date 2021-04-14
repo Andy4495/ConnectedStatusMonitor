@@ -106,6 +106,9 @@ To:
 * SparkFun Micro OLED [Breakout][12]
 * [Interface Board][14] containing system power, VFD power control, and ambient light sensor circuit
 
+## License ##
+The software and other files in this repository are released under what is commonly called the [MIT License][100]. See the file [`LICENSE`][101] in this repository.
+
 [1]: http://www.ti.com/tool/EK-TM4C1294XL
 [2]: http://www.ti.com/tool/boostxl-k350qvg-s1
 [3]: https://arduinojson.org/
@@ -120,3 +123,5 @@ To:
 [12]: https://www.sparkfun.com/products/13003
 [13]: https://github.com/Andy4495/SparkFun_Micro_OLED_Arduino_Library
 [14]: hardware/README.md
+[100]: https://choosealicense.com/licenses/mit/
+[101]: ./LICENSE
