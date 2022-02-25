@@ -1,2 +1,4 @@
 ThingSpeakKeys.h
 output.json
+.vscode/*
+.DS_Store
