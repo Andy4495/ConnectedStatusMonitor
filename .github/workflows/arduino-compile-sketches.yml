@@ -17,6 +17,8 @@ jobs:
             - name: 'energia:tivac'
               version: latest
               source-url: 'http://energia.nu/packages/package_energia_index.json'
+          sketch-paths: |
+             - .
           verbose: true
           enable-warnings-report: true
           libraries: |
