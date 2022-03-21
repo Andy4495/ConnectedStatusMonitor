@@ -1,5 +1,8 @@
 # Connected IoT Status Monitor
 
+[![Arduino Compile Sketches](https://github.com/Andy4495/ConnectedStatusMonitor/actions/workflows/arduino-compile-sketches.yml/badge.svg)](https://github.com/Andy4495/ConnectedStatusMonitor/actions/workflows/arduino-compile-sketches.yml)
+[![Check Markdown Links](https://github.com/Andy4495/ConnectedStatusMonitor/actions/workflows/CheckMarkdownLinks.yml/badge.svg)](https://github.com/Andy4495/ConnectedStatusMonitor/actions/workflows/CheckMarkdownLinks.yml)
+
 Energia (an Arduino-derived IDE for TI microcontrollers) sketch for a status display of various sensor data readings that are queried from the [ThingSpeak][6] IoT Platform.
 
 The sketch is specifically designed for use with the Texas Instruments TM4C1294 [Connected LaunchPad][1], [Kentec Touch Display BoosterPack][2] (SPI version), [Futaba 162SD03][9] Vacuum Fluorescent Display, and SparkFun [Micro OLED Breakout][12].
