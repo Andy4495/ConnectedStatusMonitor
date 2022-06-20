@@ -1,0 +1,34 @@
+# From: https://github.com/marketplace/actions/compile-arduino-sketches
+# Uses: https://github.com/arduino/compile-sketches
+name: Arduino Compile Sketches
+
+on: 
+  push:
+
+jobs:
+  compile-sketches: 
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@main
+      - name: Copy dummy secrets file.
+        run: |
+          cp ThingSpeakKeys-template.h ThingSpeakKeys.h
+      - uses: arduino/compile-sketches@v1
+        with:
+          fqbn: 'energia:tivac:EK-TM4C1294XL'
+          platforms: |
+            - name: 'energia:tivac'
+              version: latest
+              source-url: 'https://raw.githubusercontent.com/Andy4495/TI_Platform_Cores_For_Arduino/main/json/package_energia_minimal_TM4C123_104_index.json'
+          sketch-paths: |
+            - .
+          verbose: true
+          enable-warnings-report: true
+          libraries: |
+            - source-path: ./
+            - name: ArduinoJson
+            - source-url: https://github.com/Andy4495/FutabaVFD162S
+            - source-url: https://github.com/Andy4495/SparkFun_Micro_OLED_Arduino_Library
+            - source-url: https://github.com/PaulStoffregen/Time
+              version: v1.5
+

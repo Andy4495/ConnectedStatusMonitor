@@ -70,11 +70,11 @@
     Deal with JSON parse failure -- maybe just display last good value (i.e., no display indication of bad JSON)
 
 */
-#include <ArduinoJson.h>             // From https://arduinojson.org/
+#include <ArduinoJson.h>             // From https://arduinojson.org/, version 6.x
 #include <SPI.h>
 #include <Ethernet.h>
 #include <EthernetUdp.h>
-#include <TimeLib.h>                 // From https://github.com/PaulStoffregen/Time
+#include <TimeLib.h>                 // From https://github.com/PaulStoffregen/Time, version 1.5
 #include "dst.h"
 
 
