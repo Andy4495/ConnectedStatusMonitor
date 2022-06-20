@@ -49,6 +49,7 @@
   09/01/2020 - A.T. - Add support for turtle pond temperature. Rename "Pond" to "Fish" to distinguish the two sensors.
   09/14/2020 - A.T. - Change "Gargoyle" to "Sensor5"
   02/03/2021 - A.T. - Add a check for zero pressure value.
+  06/19/2021 - A.T. - Update to ArduinoJson v6. See https://arduinojson.org/v6/doc/upgrade/
 
   *** IMPORTANT ***
     The Kentec_35_SPI library has an issue where the _getRawTouch() function called in the begin() method
@@ -405,7 +406,7 @@ void GetThingSpeakField(EthernetClient* c, const char* chan, const char* key, co
 
 void getAndDisplayWeather() {
 
-  DynamicJsonBuffer jsonBuffer(bufferSize);
+  DynamicJsonDocument doc(bufferSize);
 
   int i = 0;
   char c;
@@ -444,11 +445,11 @@ void getAndDisplayWeather() {
   Serial.println("");
   client.stop();
 
-  JsonObject& root = jsonBuffer.parseObject(receiveBuffer);
+  DeserializationError error = deserializeJson(doc, receiveBuffer);
   /*
     "Parsing Program" code generated from ArduinoJson Assistant at arduinojson.org:
 
-    JsonObject& channel = root["channel"];
+    JsonObject channel = root["channel"];
     long channel_id = channel["id"]; // 379945
     const char* channel_name = channel["name"]; // "Weather-Station"
     const char* channel_description = channel["description"]; // "Outdoor weather station using MSP430 LaunchPad and SENSORS BoosterPack. "
@@ -467,9 +468,9 @@ void getAndDisplayWeather() {
     long channel_last_entry_id = channel["last_entry_id"]; // 90649
   */
 
-  if (root.success()) {
+  if (!error) {
 
-    JsonObject& feeds0 = root["feeds"][0];
+    JsonObject feeds0 = doc["feeds"][0];
 
     const char* feeds0_created_at = feeds0["created_at"]; // "2018-06-10T22:26:23Z"
     long feeds0_entry_id = feeds0["entry_id"]; // 90649
@@ -514,7 +515,8 @@ void getAndDisplayWeather() {
   }
   else
   {
-    Serial.println("JSON parse failed.");
+    Serial.print("JSON parse failed with code: ");
+    Serial.println(error.c_str());
     snprintf(outdoorTemp, TEMPSIZE,  "  N/A");
     snprintf(outdoorLux, LUXSIZE, "     N/A");
     snprintf(outdoorRH, RHSIZE,       " N/A");
@@ -548,7 +550,7 @@ void getAndDisplayWeather() {
 
 void getPressure() {
 
-  DynamicJsonBuffer jsonBuffer(bufferSize);
+  DynamicJsonDocument doc(bufferSize);
 
   int i = 0;
   char c;
@@ -585,11 +587,11 @@ void getPressure() {
   Serial.println("");
   client.stop();
 
-  JsonObject& root = jsonBuffer.parseObject(receiveBuffer);
+  DeserializationError error = deserializeJson(doc, receiveBuffer);
   /*
     "Parsing Program" code generated from ArduinoJson Assistant at arduinojson.org:
 
-    JsonObject& channel = root["channel"];
+    JsonObject channel = root["channel"];
     long channel_id = channel["id"]; // 379945
     const char* channel_name = channel["name"]; // "Weather-Station"
     const char* channel_description = channel["description"]; // "Outdoor weather station using MSP430 LaunchPad and SENSORS BoosterPack. "
@@ -601,9 +603,9 @@ void getPressure() {
     long channel_last_entry_id = channel["last_entry_id"]; // 90649
   */
 
-  if (root.success()) {
+  if (!error) {
 
-    JsonObject& feeds0 = root["feeds"][0];
+    JsonObject feeds0 = doc["feeds"][0];
 
     const char* feeds0_created_at = feeds0["created_at"]; // "2018-06-10T22:26:23Z"
     long feeds0_entry_id = feeds0["entry_id"]; // 90649
@@ -639,14 +641,15 @@ void getPressure() {
   }
   else
   {
-    Serial.println("JSON parse failed.");
+    Serial.print("JSON parse failed with code: ");
+    Serial.println(error.c_str());
   }
 } // getPressure()
 
 
 void getAndDisplaySlim() {
 
-  DynamicJsonBuffer jsonBuffer(bufferSize);
+  DynamicJsonDocument doc(bufferSize);
 
   int i = 0;
   char c;
@@ -683,11 +686,12 @@ void getAndDisplaySlim() {
   Serial.println("");
   client.stop();
 
-  JsonObject& root = jsonBuffer.parseObject(receiveBuffer);
+  DeserializationError error = deserializeJson(doc, receiveBuffer);
+
   /*
     "Parsing Program" code generated from ArduinoJson Assistant at arduinojson.org:
 
-    JsonObject& channel = root["channel"];
+    JsonObject channel = root["channel"];
     long channel_id = channel["id"]; // 412285
     const char* channel_name = channel["name"]; // "Slim's Temp"
     const char* channel_description = channel["description"]; // "Slim's temperature sensor. "
@@ -704,9 +708,9 @@ void getAndDisplaySlim() {
     long channel_last_entry_id = channel["last_entry_id"]; // 165702
   */
 
-  if (root.success()) {
+  if (!error) {
 
-    JsonObject& feeds0 = root["feeds"][0];
+    JsonObject feeds0 = doc["feeds"][0];
     const char* feeds0_created_at = feeds0["created_at"]; // "2018-06-10T22:26:23Z"
     long feeds0_entry_id = feeds0["entry_id"]; // 90649
 
@@ -732,7 +736,8 @@ void getAndDisplaySlim() {
   }
   else
   {
-    Serial.println("JSON parse failed.");
+    Serial.print("JSON parse failed with code: ");
+    Serial.println(error.c_str());
     snprintf(slimTemp, TEMPSIZE, "  N/A");
     snprintf(slimBatt, BATTSIZE, "  N/A");
     strcpy(slimTime, "     N/A");
@@ -752,7 +757,7 @@ void getAndDisplaySlim() {
 
 void getAndDisplaySensor5() {
 
-  DynamicJsonBuffer jsonBuffer(bufferSize);
+  DynamicJsonDocument doc(bufferSize);
 
   int i = 0;
   char c;
@@ -789,11 +794,12 @@ void getAndDisplaySensor5() {
   Serial.println("");
   client.stop();
 
-  JsonObject& root = jsonBuffer.parseObject(receiveBuffer);
+  DeserializationError error = deserializeJson(doc, receiveBuffer);
+
   /*
     "Parsing Program" code generated from ArduinoJson Assistant at arduinojson.org:
 
-    JsonObject& channel = root["channel"];
+    JsonObject channel = root["channel"];
     long channel_id = channel["id"]; // 412284
     const char* channel_name = channel["name"]; // "Indoor Temp 5"
     const char* channel_description = channel["description"]; // "Indoor Temp Sensor #5"
@@ -810,9 +816,9 @@ void getAndDisplaySensor5() {
     long channel_last_entry_id = channel["last_entry_id"]; // 243115
   */
 
-  if (root.success()) {
+  if (!error) {
 
-    JsonObject& feeds0 = root["feeds"][0];
+    JsonObject feeds0 = doc["feeds"][0];
     const char* feeds0_created_at = feeds0["created_at"]; // "2018-06-10T22:26:23Z"
     long feeds0_entry_id = feeds0["entry_id"]; // 90649
 
@@ -839,7 +845,8 @@ void getAndDisplaySensor5() {
   }
   else
   {
-    Serial.println("JSON parse failed.");
+    Serial.print("JSON parse failed with code: ");
+    Serial.println(error.c_str());
     snprintf(sensor5Temp, TEMPSIZE, "  N/A");
     snprintf(sensor5Batt, BATTSIZE, "  N/A");
     strcpy(sensor5Time, "     N/A");
@@ -859,7 +866,7 @@ void getAndDisplaySensor5() {
 
 void getAndDisplayWorkshop() {
 
-  DynamicJsonBuffer jsonBuffer(bufferSize);
+  DynamicJsonDocument doc(bufferSize);
 
   int i = 0;
   char c;
@@ -896,11 +903,11 @@ void getAndDisplayWorkshop() {
   Serial.println("");
   client.stop();
 
-  JsonObject& root = jsonBuffer.parseObject(receiveBuffer);
+  DeserializationError error = deserializeJson(doc, receiveBuffer);
 
-  if (root.success()) {
+  if (!error) {
 
-    JsonObject& feeds0 = root["feeds"][0];
+    JsonObject feeds0 = doc["feeds"][0];
     const char* feeds0_created_at = feeds0["created_at"]; // "2018-06-10T22:26:23Z"
     long feeds0_entry_id = feeds0["entry_id"]; // 90649
 
@@ -925,7 +932,8 @@ void getAndDisplayWorkshop() {
   }
   else
   {
-    Serial.println("JSON parse failed.");
+    Serial.print("JSON parse failed with code: ");
+    Serial.println(error.c_str());
     snprintf(workshopTemp, TEMPSIZE, "  N/A");
     strcpy(workshopTime, "     N/A");
   }
@@ -939,7 +947,7 @@ void getAndDisplayWorkshop() {
 
 void getAndDisplayPond() {
 
-  DynamicJsonBuffer jsonBuffer(bufferSize);
+  DynamicJsonDocument doc(bufferSize);
 
   int i = 0;
   char c;
@@ -974,11 +982,12 @@ void getAndDisplayPond() {
   Serial.println("");
   client.stop();
 
-  JsonObject& root = jsonBuffer.parseObject(receiveBuffer);
+  DeserializationError error = deserializeJson(doc, receiveBuffer);
+
   /*
     "Parsing Program" code generated from ArduinoJson Assistant at arduinojson.org:
 
-    JsonObject& channel = root["channel"];
+    JsonObject channel = root["channel"];
     long channel_id = channel["id"]; // 572681
     const char* channel_name = channel["name"]; // "Pond Sensor"
     const char* channel_description = channel["description"]; // "Various sensor readings at the pond. "
@@ -995,9 +1004,9 @@ void getAndDisplayPond() {
     int channel_last_entry_id = channel["last_entry_id"]; // 77
   */
 
-  if (root.success()) {
+  if (!error) {
 
-    JsonObject& feeds0 = root["feeds"][0];
+    JsonObject feeds0 = doc["feeds"][0];
     const char* feeds0_created_at = feeds0["created_at"]; // "2018-06-10T22:26:23Z"
     long feeds0_entry_id = feeds0["entry_id"]; // 90649
 
@@ -1019,7 +1028,8 @@ void getAndDisplayPond() {
   }
   else
   {
-    Serial.println("JSON parse failed.");
+    Serial.print("JSON parse failed with code: ");
+    Serial.println(error.c_str());
     snprintf(fishTemp, TEMPSIZE, "  N/A");
     snprintf(turtleTemp, TEMPSIZE, "  N/A");
     strcpy(pondTime, "     N/A");
@@ -1036,7 +1046,7 @@ void getAndDisplayPond() {
 
 void getAndDisplayGarage() {
 
-  DynamicJsonBuffer jsonBuffer(bufferSize);
+  DynamicJsonDocument doc(bufferSize);
 
   uint16_t doorColor;
 
@@ -1074,11 +1084,11 @@ void getAndDisplayGarage() {
   Serial.println("");
   client.stop();
 
-  JsonObject& root = jsonBuffer.parseObject(receiveBuffer);
+  DeserializationError error = deserializeJson(doc, receiveBuffer);
   /*
     "Parsing Program" code generated from ArduinoJson Assistant at arduinojson.org:
 
-    JsonObject& channel = root["channel"];
+    JsonObject channel = root["channel"];
     long channel_id = channel["id"]; // 452942
     const char* channel_name = channel["name"]; // "Garage Repeater"
     const char* channel_description = channel["description"]; // "Repeater hub to improve weather station reception"
@@ -1097,9 +1107,9 @@ void getAndDisplayGarage() {
     long channel_last_entry_id = channel["last_entry_id"]; // 51130
   */
 
-  if (root.success()) {
+  if (!error) {
 
-    JsonObject& feeds0 = root["feeds"][0];
+    JsonObject feeds0 = doc["feeds"][0];
     const char* feeds0_created_at = feeds0["created_at"]; // "2018-06-10T22:26:23Z"
     long feeds0_entry_id = feeds0["entry_id"]; // 90649
 
@@ -1124,7 +1134,8 @@ void getAndDisplayGarage() {
   }
   else
   {
-    Serial.println("JSON parse failed.");
+    Serial.print("JSON parse failed with code: ");
+    Serial.println(error.c_str());
     snprintf(garageDoor, GDSIZE, "   N/A");
     strcpy(garageTime, "     N/A");
     doorColor = whiteColour;

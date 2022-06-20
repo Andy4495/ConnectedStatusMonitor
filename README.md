@@ -112,6 +112,7 @@ Note that these directions are Windows-specific. Mac and Linux instructions are 
 
 - [ArduinoJson][3]
 - [Arduino Time Library][5]
+  - The code currently requires version 1.5 of the `Time` library. Version 1.6 and later use `pgm_read_ptr` instead of `pgm_read_word`, which causes a compile error with the Tiva board package.
 - [FutabaUsVfd162S Library][8]
   - This is an updated version of the library available on [Arduino Playground][10]
 - Modified SparkFun Micro OLED [Library][13]
