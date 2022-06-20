@@ -27,8 +27,9 @@ jobs:
           libraries: |
             - source-path: ./
             - name: ArduinoJson
-            - source-url: https://github.com/Andy4495/FutabaVFD162S
-            - source-url: https://github.com/Andy4495/SparkFun_Micro_OLED_Arduino_Library
-            - source-url: https://github.com/PaulStoffregen/Time
+            - source-url: https://github.com/Andy4495/FutabaVFD162S.git
+            - source-url: https://github.com/Andy4495/SparkFun_Micro_OLED_Arduino_Library.git
+            - source-url: https://github.com/PaulStoffregen/Time.git
               version: v1.5
+
 
