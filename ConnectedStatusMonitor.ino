@@ -49,7 +49,8 @@
   09/01/2020 - A.T. - Add support for turtle pond temperature. Rename "Pond" to "Fish" to distinguish the two sensors.
   09/14/2020 - A.T. - Change "Gargoyle" to "Sensor5"
   02/03/2021 - A.T. - Add a check for zero pressure value.
-  06/19/2021 - A.T. - Update to ArduinoJson v6. See https://arduinojson.org/v6/doc/upgrade/
+  06/19/2022 - A.T. - Update to ArduinoJson v6. See https://arduinojson.org/v6/doc/upgrade/
+  06/19/2022 - A.T. - Fix some compiler warnings.
 
   *** IMPORTANT ***
     The Kentec_35_SPI library has an issue where the _getRawTouch() function called in the begin() method
@@ -408,8 +409,8 @@ void getAndDisplayWeather() {
 
   DynamicJsonDocument doc(bufferSize);
 
-  int i = 0;
-  char c;
+  unsigned int i = 0;
+  signed char c;
 
   uint16_t battColor;
 
@@ -489,11 +490,11 @@ void getAndDisplayWeather() {
     Serial.print("Entry ID: ");
     Serial.println(feeds0_entry_id);
 
-    snprintf(outdoorTemp, TEMPSIZE, "%3i.%i", Tf / 10, abs(Tf) % 10);
-    snprintf(outdoorLux, LUXSIZE, "%8i", lux);
-    snprintf(outdoorRH, RHSIZE, "%2i.%i", rh / 10, rh % 10);
-    snprintf(outdoorP, PSIZE, "%2i.%02i", p / 100, p % 100);
-    snprintf(outdoorBatt, BATTSIZE, "%i.%03i", wBatt / 1000, wBatt % 1000);
+    snprintf(outdoorTemp, TEMPSIZE, "%3li.%li", Tf / 10, abs(Tf) % 10);
+    snprintf(outdoorLux, LUXSIZE, "%8li", lux);
+    snprintf(outdoorRH, RHSIZE, "%2li.%li", rh / 10, rh % 10);
+    snprintf(outdoorP, PSIZE, "%2li.%02li", p / 100, p % 100);
+    snprintf(outdoorBatt, BATTSIZE, "%li.%03li", wBatt / 1000, wBatt % 1000);
 
     if (wBatt < 2600) battColor = redColour;
     else battColor = greenColour;
@@ -552,8 +553,8 @@ void getPressure() {
 
   DynamicJsonDocument doc(bufferSize);
 
-  int i = 0;
-  char c;
+  unsigned int i = 0;
+  signed char c;
 
   // if you get a connection, report back via serial:
   if (client.connect(server, 80)) {
@@ -651,8 +652,8 @@ void getAndDisplaySlim() {
 
   DynamicJsonDocument doc(bufferSize);
 
-  int i = 0;
-  char c;
+  unsigned int i = 0;
+  signed char c;
 
   uint16_t tempColor, battColor;
 
@@ -731,8 +732,8 @@ void getAndDisplaySlim() {
     if (sBatt < 2300) battColor = redColour;
     else battColor = greenColour;
 
-    snprintf(slimTemp, TEMPSIZE, "%3i.%i", Tslim / 10, abs(Tslim) % 10);
-    snprintf(slimBatt, BATTSIZE, "%i.%03i", sBatt / 1000, sBatt % 1000);
+    snprintf(slimTemp, TEMPSIZE, "%3li.%li", Tslim / 10, abs(Tslim) % 10);
+    snprintf(slimBatt, BATTSIZE, "%li.%03li", sBatt / 1000, sBatt % 1000);
   }
   else
   {
@@ -759,8 +760,8 @@ void getAndDisplaySensor5() {
 
   DynamicJsonDocument doc(bufferSize);
 
-  int i = 0;
-  char c;
+  unsigned int i = 0;
+  signed char c;
 
   uint16_t tempColor, battColor;
 
@@ -840,8 +841,8 @@ void getAndDisplaySensor5() {
     if ( (B5 < LIPO_LO_BATT_LEVEL) || (remain5 < LIPO_LO_TIME_REMAIN) ) battColor = redColour;
     else battColor = greenColour;
 
-    snprintf(sensor5Temp, TEMPSIZE, "%3i.%i", T5 / 10, abs(T5) % 10);
-    snprintf(sensor5Batt, BATTSIZE, "%i.%03i", B5 / 1000, B5 % 1000);
+    snprintf(sensor5Temp, TEMPSIZE, "%3li.%li", T5 / 10, abs(T5) % 10);
+    snprintf(sensor5Batt, BATTSIZE, "%li.%03li", B5 / 1000, B5 % 1000);
   }
   else
   {
@@ -868,8 +869,8 @@ void getAndDisplayWorkshop() {
 
   DynamicJsonDocument doc(bufferSize);
 
-  int i = 0;
-  char c;
+  unsigned int i = 0;
+  signed char c;
 
   uint16_t battColor;
 
@@ -928,7 +929,7 @@ void getAndDisplayWorkshop() {
     else
       battColor = blackColour;
 
-    snprintf(workshopTemp, TEMPSIZE, "%3i.%i", T4 / 10, abs(T4) % 10);
+    snprintf(workshopTemp, TEMPSIZE, "%3li.%li", T4 / 10, abs(T4) % 10);
   }
   else
   {
@@ -949,8 +950,8 @@ void getAndDisplayPond() {
 
   DynamicJsonDocument doc(bufferSize);
 
-  int i = 0;
-  char c;
+  unsigned int i = 0;
+  signed char c;
 
   // if you get a connection, report back via serial:
   if (client.connect(server, 80)) {
@@ -1013,7 +1014,6 @@ void getAndDisplayPond() {
     long fishWaterT = strtol(feeds0["field2"], NULL, 10);
     // The Turtle Pond temp sensor is stored in "field1" which was originally designed as the "Air Temp" value
     long turtleWaterT = strtol(feeds0["field1"], NULL, 10);
-    long pondmV = strtol(feeds0["field3"], NULL, 10);
     strncpy(pondTime, feeds0_created_at, TIMESIZE - 1);
     pondTime[TIMESIZE - 1] = '\0';                         // hard-code a null terminator at end of string
 
@@ -1023,8 +1023,8 @@ void getAndDisplayPond() {
     Serial.print("Entry ID: ");
     Serial.println(feeds0_entry_id);
 
-    snprintf(fishTemp, TEMPSIZE, "%3i.%i", fishWaterT / 10, abs(fishWaterT) % 10);
-    snprintf(turtleTemp, TEMPSIZE, "%3i.%i", turtleWaterT / 10, abs(turtleWaterT) % 10);
+    snprintf(fishTemp, TEMPSIZE, "%3li.%li", fishWaterT / 10, abs(fishWaterT) % 10);
+    snprintf(turtleTemp, TEMPSIZE, "%3li.%li", turtleWaterT / 10, abs(turtleWaterT) % 10);
   }
   else
   {
@@ -1050,8 +1050,8 @@ void getAndDisplayGarage() {
 
   uint16_t doorColor;
 
-  int i = 0;
-  char c;
+  unsigned int i = 0;
+  signed char c;
 
 
   // if you get a connection, report back via serial:
@@ -1363,7 +1363,7 @@ void displayOLED() {
   int hist_delta;
   char p_decimal[3];
 
-  for (int i = 0; i < hist_num_entries; i++) {
+  for (unsigned int i = 0; i < hist_num_entries; i++) {
     if ( p_hist[i] > hist_max) hist_max = p_hist[i];
     if ( p_hist[i] < hist_min) hist_min = p_hist[i];
   }
@@ -1384,7 +1384,7 @@ void displayOLED() {
 
   // If range is values is < 30 (lines available in display area), then plot the points relative to row 15
   // If values is >= 30, then use map function to fit the values in display area
-  for (int i = 0; i < hist_num_entries; i++) {
+  for (unsigned int i = 0; i < hist_num_entries; i++) {
     if (hist_delta < 30) oled.pixel(i, 15 - (p_hist[(i + hist_position ) % hist_len] - hist_mid));
     else oled.pixel(i, map(p_hist[(i + hist_position ) % hist_len], hist_min, hist_max, 34, 0));
   }
@@ -1397,10 +1397,10 @@ void displayOLED() {
     else oled.print(p_hist[(hist_position - 1) % hist_len] / 100);
     oled.print(".");
     if (hist_num_entries < hist_len) {
-      snprintf(p_decimal, 3, "%.2d", p_hist[hist_num_entries - 1] % 100);
+      snprintf(p_decimal, 3, "%.2ld", p_hist[hist_num_entries - 1] % 100);
     }
     else {
-      snprintf(p_decimal, 3, "%.2d", p_hist[(hist_position - 1) % hist_len] % 100);
+      snprintf(p_decimal, 3, "%.2ld", p_hist[(hist_position - 1) % hist_len] % 100);
     }
     oled.print(p_decimal);
     oled.display();
