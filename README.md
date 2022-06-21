@@ -1,5 +1,6 @@
 # Connected IoT Status Monitor
 
+[![Arduino Compile Sketches](https://github.com/Andy4495/ConnectedStatusMonitor/actions/workflows/arduino-compile-sketches.yml/badge.svg)](https://github.com/Andy4495/ConnectedStatusMonitor/actions/workflows/arduino-compile-sketches.yml)
 [![Check Markdown Links](https://github.com/Andy4495/ConnectedStatusMonitor/actions/workflows/CheckMarkdownLinks.yml/badge.svg)](https://github.com/Andy4495/ConnectedStatusMonitor/actions/workflows/CheckMarkdownLinks.yml)
 
 Energia (an Arduino-derived IDE for TI microcontrollers) sketch for a status display of various sensor data readings that are queried from the [ThingSpeak][6] IoT Platform.
