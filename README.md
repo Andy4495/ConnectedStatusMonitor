@@ -50,7 +50,9 @@ The Connected LaunchPad supports Ethernet Link (LED4) and Activity (LED3) status
 
 The [LCD display][2] requires the Screen_K35_SPI library. This library is included in the MSP430 boards package with Energia, but not included in the Tiva boards package until version 1.0.4. The library requires some minor modifications to work with the TM4C1294 LauchPad. These steps need to be performed any time you upgrade Energia or the Tiva boards package version.
 
-Note that these directions are Windows-specific. Mac and Linux instructions are left as an exercise to the reader.
+Note that the sketch will compile without modifying the library as outlined in steps 2 through 6 below. The `compile-sketches` action does not use a modified library. **However, the library *must* be updated for proper operation of the sketch on the hardware used for this project.**
+
+Step 1. uses Windows-specific paths. Mac and Linux paths are similar once you find the top-level installation directory.
 
 1. If you are using Tiva boards package version 1.0.3 or earlier, copy the directory `Kentec_35_SPI` from `<Energia Install Directory>\energia-1.8.7E21\hardware\energia\msp430\libraries` to `~\AppData\Local\Energia15\packages\energia\hardware\tivac\1.0.3\libraries`
 
