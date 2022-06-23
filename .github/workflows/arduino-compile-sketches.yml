@@ -5,6 +5,11 @@ name: Arduino Compile Sketches
 on: 
   push:
   workflow_dispatch:
+    inputs:
+      message:
+        description: Message to display in job summary
+        required: false
+        type: string
 
 jobs:
   compile-sketches: 
@@ -32,5 +37,9 @@ jobs:
             - source-url: https://github.com/Andy4495/SparkFun_Micro_OLED_Arduino_Library.git
             - source-url: https://github.com/PaulStoffregen/Time.git
               version: v1.5
+      - name: Print the job summary
+        if: ${{ inputs.message != null }}
+        run: |
+          echo ${{ inputs.message }} >$GITHUB_STEP_SUMMARY
 
 
