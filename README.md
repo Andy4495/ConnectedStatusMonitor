@@ -3,11 +3,11 @@
 [![Arduino Compile Sketches](https://github.com/Andy4495/ConnectedStatusMonitor/actions/workflows/arduino-compile-sketches.yml/badge.svg)](https://github.com/Andy4495/ConnectedStatusMonitor/actions/workflows/arduino-compile-sketches.yml)
 [![Check Markdown Links](https://github.com/Andy4495/ConnectedStatusMonitor/actions/workflows/CheckMarkdownLinks.yml/badge.svg)](https://github.com/Andy4495/ConnectedStatusMonitor/actions/workflows/CheckMarkdownLinks.yml)
 
-Energia (an Arduino-derived IDE for TI microcontrollers) sketch for a status display of various sensor data readings that are queried from the [ThingSpeak][6] IoT Platform.
+Status display sketch and hardware to display various sensor data readings that are queried from the [ThingSpeak][6] IoT Platform.
 
 The sketch is specifically designed for use with the Texas Instruments TM4C1294 [Connected LaunchPad][1], [Kentec Touch Display BoosterPack][2] (SPI version), [Futaba 162SD03][9] Vacuum Fluorescent Display, and SparkFun [Micro OLED Breakout][12].
 
-While the sketch is written for a specific hardware configuration, it can be used as an example for the following (both on Arduino and Energia platforms):
+While the sketch is written for a specific hardware configuration, it can be used as an example for the following:
 
 - TCP and UDP connections using Ethernet
 - [ArduinoJson][3] library for parsing JSON strings
@@ -38,7 +38,7 @@ The [Futaba VFD][9] is enabled by a power control circuit with a logic-level MOS
 
 The [SparkFun Micro OLED][12] is used to display the atmospheric pressure history. The past 64 readings are displayed graphically to show the pressure trend to predict the weather.
 
-A modified version of the SparkFun Micro OLED [library][13] is required to work with the Energia IDE (MSP or Tiva controllers).
+A modified version of the SparkFun Micro OLED [library][13] is required to work with the Tiva controllers.
 
 The OLED is controlled using parallel-8080 mode. While the OLED also supports SPI and I2C serial control, the Energia Tiva SPI implementation is incompatible with the SparkFun library. I was also unable to get I2C mode to work on the TM4c129 LaunchPad and decided to use parallel mode since I had enough I/O available.
 
@@ -114,11 +114,12 @@ Step 1. uses Windows-specific paths. Mac and Linux paths are similar once you fi
 ## External Libraries
 
 - [ArduinoJson][3]
+  - Sketch has been pdated to suport [version 6][15]
 - [Arduino Time Library][5]
   - The code currently requires version 1.5 of the `Time` library. Version 1.6 and later use `pgm_read_ptr` instead of `pgm_read_word`, which causes a compile error with the Tiva board package.
 - [FutabaUsVfd162S Library][8]
-  - This is an updated version of the library available on [Arduino Playground][10]
-- Modified SparkFun Micro OLED [Library][13]
+- Modified [SparkFun Micro OLED Library][13]
+  - This modified version is required in order to support compilation with the Tiva board
 
 ## References
 
@@ -150,6 +151,7 @@ The software and other files in this repository are released under what is commo
 [12]: https://www.sparkfun.com/products/13003
 [13]: https://github.com/Andy4495/SparkFun_Micro_OLED_Arduino_Library
 [14]: hardware/README.md
+[15]: https://arduinojson.org/v6/doc/upgrade/
 [100]: https://choosealicense.com/licenses/mit/
 [101]: ./LICENSE
 [200]: https://github.com/Andy4495/ConnectedStatusMonitor
