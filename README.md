@@ -1,4 +1,4 @@
-# Connected IoT Status Monitor 
+# Connected IoT Status Monitor
 
 [![Arduino Compile Sketches](https://github.com/Andy4495/ConnectedStatusMonitor/actions/workflows/arduino-compile-sketches.yml/badge.svg)](https://github.com/Andy4495/ConnectedStatusMonitor/actions/workflows/arduino-compile-sketches.yml)
 [![Check Markdown Links](https://github.com/Andy4495/ConnectedStatusMonitor/actions/workflows/CheckMarkdownLinks.yml/badge.svg)](https://github.com/Andy4495/ConnectedStatusMonitor/actions/workflows/CheckMarkdownLinks.yml)
