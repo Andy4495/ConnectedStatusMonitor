@@ -1,10 +1,10 @@
-# VFD Interface Board for [Connected Status Monitor][6]
+## VFD Interface Board for [Connected Status Monitor][6]
 
 The Futaba 162SD03 [VFD][3] is a relatively power hungry device (especially compared to a low-power microcontroller). VFDs can also suffer from fading with use over time.
 
 I therefore did not want the VFD on all the time -- I wanted it to be powered down when I was not using [Connected Status Monitor][6], just like I turn off the LCD backlight when I am not in the room.
 
-## Power Control Circuit
+# Power Control Circuit
 
 Since the VFD pulls a relatively large amount of current -- about 320 to 360 mA when powered depending on the number of elements activate -- I need to use a beefier FET to switch the current. I chose an IRL540 N-channel MOSFET. I could not fully turn on the MOSFET at these current levels with 3.3 V logic, so I use 2N3904 to control the MOSFET.
 
