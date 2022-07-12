@@ -1,0 +1,21 @@
+# Uses: https://github.com/marketplace/actions/markdownlint-cli
+name: markdownlint check
+
+on: 
+  push:
+    paths: 
+      - '**.md'
+  workflow_dispatch:
+
+jobs:
+  markdownlint:
+    name: markdownlint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@main
+      - uses: nosborn/github-action-markdown-cli@v3
+        with:
+          files: '*.md **/*.md'
+          config_file: ./.github/workflows/markdownlintconfig.json
+
+            
