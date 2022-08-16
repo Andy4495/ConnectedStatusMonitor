@@ -114,7 +114,7 @@ Step 1. uses Windows-specific paths. Mac and Linux paths are similar once you fi
 ## External Libraries
 
 - [ArduinoJson][3]
-  - Sketch has been pdated to suport [version 6][15]
+  - Sketch has been updated to suport [version 6][15]
 - [Arduino Time Library][5]
   - The code currently requires version 1.5 of the `Time` library. Version 1.6 and later use `pgm_read_ptr` instead of `pgm_read_word`, which causes a compile error with the Tiva board package.
 - [FutabaUsVfd162S Library][8]
