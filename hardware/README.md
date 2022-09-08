@@ -64,6 +64,6 @@ Pin  Description
 [4]: https://www.ti.com/lit/ds/symlink/cd40109b.pdf
 [5]: https://playground.arduino.cc/Learning/PhotoResistor
 [6]: https://github.com/Andy4495/ConnectedStatusMonitor
-[100]: https://choosealicense.com/licenses/mit/
-[101]: ../LICENSE
-[200]: https://github.com/Andy4495/ConnectedStatusMonitor
+[//]: # ([100]: https://choosealicense.com/licenses/mit/)
+[//]: # ([101]: ../LICENSE)
+[//]: # ([200]: https://github.com/Andy4495/ConnectedStatusMonitor)
