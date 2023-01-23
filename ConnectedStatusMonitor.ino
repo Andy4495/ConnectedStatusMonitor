@@ -51,6 +51,7 @@
   02/03/2021 - A.T. - Add a check for zero pressure value.
   06/19/2022 - A.T. - Update to ArduinoJson v6. See https://arduinojson.org/v6/doc/upgrade/
   06/19/2022 - A.T. - Fix some compiler warnings.
+  01/18/2023 - A.T. - Rename Slim sensor to Sensor3
 
   *** IMPORTANT ***
     The Kentec_35_SPI library has an issue where the _getRawTouch() function called in the begin() method
@@ -142,8 +143,8 @@ char outdoorRH[RHSIZE];
 char prevOutdoorRH[RHSIZE];
 char outdoorP[PSIZE];
 char prevOutdoorP[PSIZE];
-char slimTemp[TEMPSIZE];
-char prevSlimTemp[TEMPSIZE];
+char sensor3Temp[TEMPSIZE];
+char prevSensor3Temp[TEMPSIZE];
 char fishTemp[TEMPSIZE];
 char prevFishTemp[TEMPSIZE];
 char turtleTemp[TEMPSIZE];
@@ -156,14 +157,14 @@ char garageDoor[GDSIZE];
 char prevGarageDoor[GDSIZE];
 char outdoorBatt[BATTSIZE];
 char prevOutdoorBatt[BATTSIZE];
-char slimBatt[BATTSIZE];
-char prevSlimBatt[BATTSIZE];
+char sensor3Batt[BATTSIZE];
+char prevSensor3Batt[BATTSIZE];
 char sensor5Batt[BATTSIZE];
 char prevSensor5Batt[BATTSIZE];
 char timeAndDate[TADSIZE];
 char prevTimeAndDate[TADSIZE];
 char weatherTime[TIMESIZE];
-char slimTime[TIMESIZE];
+char sensor3Time[TIMESIZE];
 char sensor5Time[TIMESIZE];
 char pondTime[TIMESIZE];
 char workshopTime[TIMESIZE];
@@ -287,13 +288,13 @@ void setup() {
   prevOutdoorLux[0] = 0;
   prevOutdoorRH[0] = 0;
   prevOutdoorP[0] = 0;
-  prevSlimTemp[0] = 0;
+  prevSensor3Temp[0] = 0;
   prevWorkshopTemp[0] = 0;
   prevFishTemp[0] = 0;
   prevTurtleTemp[0] = 0;
   prevGarageDoor[0] = 0;
   prevOutdoorBatt[0] = 0;
-  prevSlimBatt[0] = 0;
+  prevSensor3Batt[0] = 0;
   prevTimeAndDate[0] = 0;
 
   Udp.begin(localPort);
@@ -353,7 +354,7 @@ void loop()
       if (lightSensor > LIGHT_SENSOR_THRESHOLD) {
         getAndDisplayTime();
         getAndDisplayWeather();
-        getAndDisplaySlim();
+        getAndDisplaySensor3();
         getAndDisplaySensor5();
         getAndDisplayPond();
         getAndDisplayWorkshop();
@@ -648,7 +649,7 @@ void getPressure() {
 } // getPressure()
 
 
-void getAndDisplaySlim() {
+void getAndDisplaySensor3() {
 
   DynamicJsonDocument doc(bufferSize);
 
@@ -666,8 +667,8 @@ void getAndDisplaySlim() {
     Serial.println("connection failed");
   }
 
-  // Make a HTTP request for Slim's sensor
-  GetThingSpeakChannel(&client, SLIMTEMP_CHANNEL, SLIMTEMP_KEY, 1);
+  // Make a HTTP request for Sensor3's sensor
+  GetThingSpeakChannel(&client, SENSOR3TEMP_CHANNEL, SENSOR3TEMP_KEY, 1);
 
   // Need to check for connection and wait for characters
   // Need to timeout after some time, but not too soon before receiving response
@@ -694,8 +695,8 @@ void getAndDisplaySlim() {
 
     JsonObject channel = root["channel"];
     long channel_id = channel["id"]; // 412285
-    const char* channel_name = channel["name"]; // "Slim's Temp"
-    const char* channel_description = channel["description"]; // "Slim's temperature sensor. "
+    const char* channel_name = channel["name"]; // "Sensor3's Temp"
+    const char* channel_description = channel["description"]; // "Sensor3's temperature sensor. "
     const char* channel_latitude = channel["latitude"]; // "0.0"
     const char* channel_longitude = channel["longitude"]; // "0.0"
     const char* channel_field1 = channel["field1"]; // "Temp"
@@ -715,10 +716,10 @@ void getAndDisplaySlim() {
     const char* feeds0_created_at = feeds0["created_at"]; // "2018-06-10T22:26:23Z"
     long feeds0_entry_id = feeds0["entry_id"]; // 90649
 
-    long Tslim = strtol(feeds0["field1"], NULL, 10);
+    long Tsensor3 = strtol(feeds0["field1"], NULL, 10);
     long sBatt = strtol(feeds0["field2"], NULL, 10);
-    strncpy(slimTime, feeds0_created_at, TIMESIZE - 1);
-    slimTime[TIMESIZE - 1] = '\0';                         // hard-code a null terminator at end of string
+    strncpy(sensor3Time, feeds0_created_at, TIMESIZE - 1);
+    sensor3Time[TIMESIZE - 1] = '\0';                         // hard-code a null terminator at end of string
 
     Serial.println("Parsed JSON: ");
     Serial.print("Created at: ");
@@ -726,35 +727,35 @@ void getAndDisplaySlim() {
     Serial.print("Entry ID: ");
     Serial.println(feeds0_entry_id);
 
-    if (Tslim < 800) tempColor = redColour;
+    if (Tsensor3 < 800) tempColor = redColour;
     else tempColor = greenColour;
 
     if (sBatt < 2300) battColor = redColour;
     else battColor = greenColour;
 
-    snprintf(slimTemp, TEMPSIZE, "%3li.%li", Tslim / 10, abs(Tslim) % 10);
-    snprintf(slimBatt, BATTSIZE, "%li.%03li", sBatt / 1000, sBatt % 1000);
+    snprintf(sensor3Temp, TEMPSIZE, "%3li.%li", Tsensor3 / 10, abs(Tsensor3) % 10);
+    snprintf(sensor3Batt, BATTSIZE, "%li.%03li", sBatt / 1000, sBatt % 1000);
   }
   else
   {
     Serial.print("JSON parse failed with code: ");
     Serial.println(error.c_str());
-    snprintf(slimTemp, TEMPSIZE, "  N/A");
-    snprintf(slimBatt, BATTSIZE, "  N/A");
-    strcpy(slimTime, "     N/A");
+    snprintf(sensor3Temp, TEMPSIZE, "  N/A");
+    snprintf(sensor3Batt, BATTSIZE, "  N/A");
+    strcpy(sensor3Time, "     N/A");
     battColor = whiteColour;
     tempColor = whiteColour;
   }
 
-  myScreen.gText(layout.SlimTempValue.x, layout.SlimTempValue.y, prevSlimTemp, blackColour);
-  myScreen.gText(layout.SlimTempValue.x, layout.SlimTempValue.y, slimTemp, tempColor);
-  strncpy(prevSlimTemp, slimTemp, TEMPSIZE);
+  myScreen.gText(layout.Sensor3TempValue.x, layout.Sensor3TempValue.y, prevSensor3Temp, blackColour);
+  myScreen.gText(layout.Sensor3TempValue.x, layout.Sensor3TempValue.y, sensor3Temp, tempColor);
+  strncpy(prevSensor3Temp, sensor3Temp, TEMPSIZE);
 
-  myScreen.gText(layout.BattSlimValue.x, layout.BattSlimValue.y, prevSlimBatt, blackColour);
-  myScreen.gText(layout.BattSlimValue.x, layout.BattSlimValue.y, slimBatt, battColor);
-  strncpy(prevSlimBatt, slimBatt, BATTSIZE);
+  myScreen.gText(layout.BattSensor3Value.x, layout.BattSensor3Value.y, prevSensor3Batt, blackColour);
+  myScreen.gText(layout.BattSensor3Value.x, layout.BattSensor3Value.y, sensor3Batt, battColor);
+  strncpy(prevSensor3Batt, sensor3Batt, BATTSIZE);
 
-} // getAndDisplaySlim()
+} // getAndDisplaySensor3()
 
 void getAndDisplaySensor5() {
 
@@ -774,7 +775,7 @@ void getAndDisplaySensor5() {
     Serial.println("connection failed");
   }
 
-  // Make a HTTP request for Slim's sensor
+  // Make a HTTP request for Sensor3's sensor
   GetThingSpeakChannel(&client, TEMP5_CHANNEL, TEMP5_KEY, 1);
 
   // Need to check for connection and wait for characters
@@ -883,7 +884,7 @@ void getAndDisplayWorkshop() {
     Serial.println("connection failed");
   }
 
-  // Make a HTTP request for Slim's sensor
+  // Make a HTTP request for Sensor3's sensor
   GetThingSpeakChannel(&client, TEMP4_CHANNEL, TEMP4_KEY, 1);
 
   // Need to check for connection and wait for characters
@@ -1248,8 +1249,8 @@ void displayTitles() {
   myScreen.gText(layout.WeatherLuxUnits.x, layout.WeatherLuxUnits.y, Lux);
   myScreen.gText(layout.WeatherRHUnits.x, layout.WeatherRHUnits.y, RH);
   myScreen.gText(layout.WeatherPUnits.x, layout.WeatherPUnits.y, inHG);
-  myScreen.gText(layout.SlimTitle.x, layout.SlimTitle.y, SlimTitle);
-  myScreen.gText(layout.SlimTempUnits.x, layout.SlimTempUnits.y, DegreesF);
+  myScreen.gText(layout.Sensor3Title.x, layout.Sensor3Title.y, Sensor3Title);
+  myScreen.gText(layout.Sensor3TempUnits.x, layout.Sensor3TempUnits.y, DegreesF);
   myScreen.gText(layout.Sensor5Title.x, layout.Sensor5Title.y, Sensor5Title);
   myScreen.gText(layout.Sensor5TempUnits.x, layout.Sensor5TempUnits.y, DegreesF);
   myScreen.gText(layout.WorkshopTitle.x, layout.WorkshopTitle.y, WorkshopTitle);
@@ -1262,8 +1263,8 @@ void displayTitles() {
   myScreen.gText(layout.BattTitle.x, layout.BattTitle.y, BatteriesTitle);
   myScreen.gText(layout.BattOutdoorSubtitle.x, layout.BattOutdoorSubtitle.y, OutdoorSubtitle);
   myScreen.gText(layout.BattOutdoorUnits.x, layout.BattOutdoorValue.y, V);
-  myScreen.gText(layout.BattSlimSubtitle.x, layout.BattSlimSubtitle.y, SlimSubtitle);
-  myScreen.gText(layout.BattSlimUnits.x, layout.BattSlimUnits.y, V);
+  myScreen.gText(layout.BattSensor3Subtitle.x, layout.BattSensor3Subtitle.y, Sensor3Subtitle);
+  myScreen.gText(layout.BattSensor3Units.x, layout.BattSensor3Units.y, V);
   myScreen.gText(layout.BattSensor5Subtitle.x, layout.BattSensor5Subtitle.y, Sensor5Subtitle);
   myScreen.gText(layout.BattSensor5Units.x, layout.BattSensor5Units.y, V);
   // Don't really need to display "Time and Date" title -- it's pretty obvious
@@ -1330,9 +1331,9 @@ void displayVFD() {
   vfd.print(weatherTime + 5);
   delay(DISPLAY_DELAY);
   vfd.clear();
-  vfd.print("Slim: ");
+  vfd.print("Sensor3: ");
   vfd.setCursor(0, 1);        // Line 2
-  vfd.print(slimTime + 5);
+  vfd.print(sensor3Time + 5);
   delay(DISPLAY_DELAY);
   vfd.clear();
   vfd.print("Sensor 5: ");

@@ -14,9 +14,9 @@ struct Layout {
   Coord WeatherRHUnits;
   Coord WeatherPValue;
   Coord WeatherPUnits;
-  Coord SlimTitle;
-  Coord SlimTempValue;
-  Coord SlimTempUnits;
+  Coord Sensor3Title;
+  Coord Sensor3TempValue;
+  Coord Sensor3TempUnits;
   Coord Sensor5Title;
   Coord Sensor5TempValue;
   Coord Sensor5TempUnits;
@@ -36,9 +36,9 @@ struct Layout {
   Coord BattOutdoorSubtitle;
   Coord BattOutdoorValue;
   Coord BattOutdoorUnits;
-  Coord BattSlimSubtitle;
-  Coord BattSlimValue;
-  Coord BattSlimUnits;
+  Coord BattSensor3Subtitle;
+  Coord BattSensor3Value;
+  Coord BattSensor3Units;
   Coord BattSensor5Subtitle;
   Coord BattSensor5Value;
   Coord BattSensor5Units;
@@ -47,7 +47,7 @@ struct Layout {
 };
 
 const char WeatherTitle[]     = "Weather";
-const char SlimTitle[]        = "Slim";
+const char Sensor3Title[]     = "Sensor 3";
 const char Sensor5Title[]     = "Sensor 5";
 const char FishTitle[]        = "Fish";
 const char TurtleTitle[]      = "Turtles";
@@ -62,7 +62,7 @@ const char RH[]               = "%RH";
 const char inHG[]             = "inHg";
 const char V[]                = "V";
 const char OutdoorSubtitle[]  = "Outdoor:";
-const char SlimSubtitle[]     = "Slim:";
+const char Sensor3Subtitle[]  = "Sensor 3:";
 const char FishSubtitle[]     = "Fish:";
 const char TurtleSubtitle[]   = "Turtles:";
 const char Sensor5Subtitle[]  = "Sensor 5:";
@@ -92,12 +92,12 @@ Layout::Layout() {
   WeatherPValue.y =         64;
   WeatherPUnits.x =        191;
   WeatherPUnits.y =         64;
-  SlimTitle.x =              0;  // Centered = 96
-  SlimTitle.y =             88;
-  SlimTempValue.x =        143;  // "100.1 " -> 6 chars * 12 = 72 -> 215 - 72 = 143
-  SlimTempValue.y =         88;
-  SlimTempUnits.x =        215;
-  SlimTempUnits.y =         88;
+  Sensor3Title.x =           0;  // Centered = 96
+  Sensor3Title.y =          88;
+  Sensor3TempValue.x =     143;  // "100.1 " -> 6 chars * 12 = 72 -> 215 - 72 = 143
+  Sensor3TempValue.y =      88;
+  Sensor3TempUnits.x =     215;
+  Sensor3TempUnits.y =      88;
   Sensor5Title.x =           0;
   Sensor5Title.y =         112;
   Sensor5TempValue.x =     143;
@@ -136,12 +136,12 @@ Layout::Layout() {
   BattOutdoorValue.y =     248;
   BattOutdoorUnits.x =     227;
   BattOutdoorUnits.y =     248;
-  BattSlimSubtitle.x =      24;
-  BattSlimSubtitle.y =     264;
-  BattSlimValue.x =        155;  // "3.123 " -> 6 chars * 12 = 72 -> 227 - 72 = 155
-  BattSlimValue.y =        264;
-  BattSlimUnits.x =        227;
-  BattSlimUnits.y =        264;
+  BattSensor3Subtitle.x =   24;
+  BattSensor3Subtitle.y =  264;
+  BattSensor3Value.x =     155;  // "3.123 " -> 6 chars * 12 = 72 -> 227 - 72 = 155
+  BattSensor3Value.y =     264;
+  BattSensor3Units.x =     227;
+  BattSensor3Units.y =     264;
   BattSensor5Subtitle.x =   24;
   BattSensor5Subtitle.y =  280;
   BattSensor5Value.x =     155;  // "3.123 " -> 6 chars * 12 = 72 -> 227 - 72 = 155
