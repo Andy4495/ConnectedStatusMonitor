@@ -727,8 +727,7 @@ void getAndDisplaySensor3() {
     Serial.print("Entry ID: ");
     Serial.println(feeds0_entry_id);
 
-    if (Tsensor3 < 800) tempColor = redColour;
-    else tempColor = greenColour;
+    tempColor = whiteColour;
 
     if (sBatt < 2300) battColor = redColour;
     else battColor = greenColour;
