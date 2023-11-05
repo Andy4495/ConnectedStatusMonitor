@@ -60,10 +60,11 @@ Pin  Description
 
 [1]: ./Interface-Board-Schematic.JPG
 [2]: ./Interface-Board-Pic.JPG
-[3]: https://www.allelectronics.com/mas_assets/media/allelectronics2018/spec/VFD-162.pdf
+[3]: ../extras/VFD-162.pdf
 [4]: https://www.ti.com/lit/ds/symlink/cd40109b.pdf
 [5]: https://playground.arduino.cc/Learning/PhotoResistor
 [6]: https://github.com/Andy4495/ConnectedStatusMonitor
 [//]: # ([100]: https://choosealicense.com/licenses/mit/)
 [//]: # ([101]: ../LICENSE)
 [//]: # ([200]: https://github.com/Andy4495/ConnectedStatusMonitor)
+[//]: # ([3]: https://www.allelectronics.com/mas_assets/media/allelectronics2018/spec/VFD-162.pdf)
