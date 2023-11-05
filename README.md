@@ -145,7 +145,7 @@ The software and other files in this repository are released under what is commo
 [6]: https://thingspeak.com/
 [7]: https://playground.arduino.cc/Learning/PhotoResistor
 [8]: https://github.com/Andy4495/FutabaVFD162S
-[9]: https://www.allelectronics.com/mas_assets/media/allelectronics2018/spec/VFD-162.pdf
+[9]: ./extras/VFD-162.pdf
 [11]: https://www.ti.com/lit/ds/symlink/cd40109b.pdf
 [12]: https://www.sparkfun.com/products/13003
 [13]: https://github.com/Andy4495/SparkFun_Micro_OLED_Arduino_Library
@@ -154,3 +154,4 @@ The software and other files in this repository are released under what is commo
 [100]: https://choosealicense.com/licenses/mit/
 [101]: ./LICENSE
 [//]: # ([200]: https://github.com/Andy4495/ConnectedStatusMonitor)
+[//]: # ( [9]: https://www.allelectronics.com/mas_assets/media/allelectronics2018/spec/VFD-162.pdf )
