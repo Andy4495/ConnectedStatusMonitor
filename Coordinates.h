@@ -23,9 +23,9 @@ struct Layout {
   Coord FishTitle;
   Coord FishTempValue;
   Coord FishTempUnits;
-  Coord TurtleTitle;
-  Coord TurtleTempValue;
-  Coord TurtleTempUnits;
+  Coord SmallPondTitle;
+  Coord SmallPondTempValue;
+  Coord SmallPondTempUnits;
   Coord WorkshopTitle;
   Coord WorkshopLoBat;
   Coord WorkshopTempValue;
@@ -49,8 +49,8 @@ struct Layout {
 const char WeatherTitle[]     = "Weather";
 const char Sensor3Title[]     = "Sensor 3";
 const char Sensor5Title[]     = "Sensor 5";
-const char FishTitle[]        = "Fish";
-const char TurtleTitle[]      = "Turtles";
+const char FishTitle[]        = "Large Pond";
+const char SmallPondTitle[]   = "Small Pond";
 const char WorkshopTitle[]    = "Workshop";
 const char WorkshopLoBat[]    = "LoBat";
 const char GDTitle[]          = "Garage Door";
@@ -63,8 +63,8 @@ const char inHG[]             = "inHg";
 const char V[]                = "V";
 const char OutdoorSubtitle[]  = "Outdoor:";
 const char Sensor3Subtitle[]  = "Sensor 3:";
-const char FishSubtitle[]     = "Fish:";
-const char TurtleSubtitle[]   = "Turtles:";
+const char FishSubtitle[]     = "Large Pond:";
+const char SmallPondSubtitle[] = "Small Pond:";
 const char Sensor5Subtitle[]  = "Sensor 5:";
 
 #define FONT_SIZE_X           12
@@ -110,12 +110,12 @@ Layout::Layout() {
   FishTempValue.y =        136;
   FishTempUnits.x =        215;
   FishTempUnits.y =        136;
-  TurtleTitle.x =            0;  // Centered = 96
-  TurtleTitle.y =          160;
-  TurtleTempValue.x =      143;
-  TurtleTempValue.y =      160;
-  TurtleTempUnits.x =      215;
-  TurtleTempUnits.y =      160;
+  SmallPondTitle.x =         0;  // Centered = 96
+  SmallPondTitle.y =       160;
+  SmallPondTempValue.x =   143;
+  SmallPondTempValue.y =   160;
+  SmallPondTempUnits.x =   215;
+  SmallPondTempUnits.y =   160;
   WorkshopTitle.x =          0;
   WorkshopTitle.y =        184;
   WorkshopLoBat.x =         96;

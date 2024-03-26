@@ -52,6 +52,7 @@
   06/19/2022 - A.T. - Update to ArduinoJson v6. See https://arduinojson.org/v6/doc/upgrade/
   06/19/2022 - A.T. - Fix some compiler warnings.
   01/18/2023 - A.T. - Rename Slim sensor to Sensor3
+  03/26/2024 - Andy4495 - Rename to Large Pond and Small Pond
 
   *** IMPORTANT ***
     The Kentec_35_SPI library has an issue where the _getRawTouch() function called in the begin() method
@@ -147,8 +148,8 @@ char sensor3Temp[TEMPSIZE];
 char prevSensor3Temp[TEMPSIZE];
 char fishTemp[TEMPSIZE];
 char prevFishTemp[TEMPSIZE];
-char turtleTemp[TEMPSIZE];
-char prevTurtleTemp[TEMPSIZE];
+char smallPondTemp[TEMPSIZE];
+char prevSmallPondTemp[TEMPSIZE];
 char sensor5Temp[TEMPSIZE];
 char prevSensor5Temp[TEMPSIZE];
 char workshopTemp[TEMPSIZE];
@@ -291,7 +292,7 @@ void setup() {
   prevSensor3Temp[0] = 0;
   prevWorkshopTemp[0] = 0;
   prevFishTemp[0] = 0;
-  prevTurtleTemp[0] = 0;
+  prevSmallPondTemp[0] = 0;
   prevGarageDoor[0] = 0;
   prevOutdoorBatt[0] = 0;
   prevSensor3Batt[0] = 0;
@@ -937,6 +938,7 @@ void getAndDisplayWorkshop() {
     Serial.println(error.c_str());
     snprintf(workshopTemp, TEMPSIZE, "  N/A");
     strcpy(workshopTime, "     N/A");
+    battColor = blackColour;
   }
 
   myScreen.gText(layout.WorkshopTempValue.x, layout.WorkshopTempValue.y, prevWorkshopTemp, blackColour);
@@ -1012,8 +1014,8 @@ void getAndDisplayPond() {
     long feeds0_entry_id = feeds0["entry_id"]; // 90649
 
     long fishWaterT = strtol(feeds0["field2"], NULL, 10);
-    // The Turtle Pond temp sensor is stored in "field1" which was originally designed as the "Air Temp" value
-    long turtleWaterT = strtol(feeds0["field1"], NULL, 10);
+    // The Small Pond temp sensor is stored in "field1" which was originally designed as the "Air Temp" value
+    long smallPondWaterT = strtol(feeds0["field1"], NULL, 10);
     strncpy(pondTime, feeds0_created_at, TIMESIZE - 1);
     pondTime[TIMESIZE - 1] = '\0';                         // hard-code a null terminator at end of string
 
@@ -1024,23 +1026,23 @@ void getAndDisplayPond() {
     Serial.println(feeds0_entry_id);
 
     snprintf(fishTemp, TEMPSIZE, "%3li.%li", fishWaterT / 10, abs(fishWaterT) % 10);
-    snprintf(turtleTemp, TEMPSIZE, "%3li.%li", turtleWaterT / 10, abs(turtleWaterT) % 10);
+    snprintf(smallPondTemp, TEMPSIZE, "%3li.%li", smallPondWaterT / 10, abs(smallPondWaterT) % 10);
   }
   else
   {
     Serial.print("JSON parse failed with code: ");
     Serial.println(error.c_str());
     snprintf(fishTemp, TEMPSIZE, "  N/A");
-    snprintf(turtleTemp, TEMPSIZE, "  N/A");
+    snprintf(smallPondTemp, TEMPSIZE, "  N/A");
     strcpy(pondTime, "     N/A");
   }
 
   myScreen.gText(layout.FishTempValue.x, layout.FishTempValue.y, prevFishTemp, blackColour);
   myScreen.gText(layout.FishTempValue.x, layout.FishTempValue.y, fishTemp);
   strncpy(prevFishTemp, fishTemp, TEMPSIZE);
-  myScreen.gText(layout.TurtleTempValue.x, layout.TurtleTempValue.y, prevTurtleTemp, blackColour);
-  myScreen.gText(layout.TurtleTempValue.x, layout.TurtleTempValue.y, turtleTemp);
-  strncpy(prevTurtleTemp, turtleTemp, TEMPSIZE);
+  myScreen.gText(layout.SmallPondTempValue.x, layout.SmallPondTempValue.y, prevSmallPondTemp, blackColour);
+  myScreen.gText(layout.SmallPondTempValue.x, layout.SmallPondTempValue.y, smallPondTemp);
+  strncpy(prevSmallPondTemp, smallPondTemp, TEMPSIZE);
 
 } // getAndDisplayPond()
 
@@ -1256,8 +1258,8 @@ void displayTitles() {
   myScreen.gText(layout.WorkshopTempUnits.x, layout.WorkshopTempUnits.y, DegreesF);
   myScreen.gText(layout.FishTitle.x, layout.FishTitle.y, FishTitle);
   myScreen.gText(layout.FishTempUnits.x, layout.FishTempUnits.y, DegreesF);
-  myScreen.gText(layout.TurtleTitle.x, layout.TurtleTitle.y, TurtleTitle);
-  myScreen.gText(layout.TurtleTempUnits.x, layout.TurtleTempUnits.y, DegreesF);
+  myScreen.gText(layout.SmallPondTitle.x, layout.SmallPondTitle.y, SmallPondTitle);
+  myScreen.gText(layout.SmallPondTempUnits.x, layout.SmallPondTempUnits.y, DegreesF);
   myScreen.gText(layout.GDTitle.x, layout.GDTitle.y, GDTitle);
   myScreen.gText(layout.BattTitle.x, layout.BattTitle.y, BatteriesTitle);
   myScreen.gText(layout.BattOutdoorSubtitle.x, layout.BattOutdoorSubtitle.y, OutdoorSubtitle);
