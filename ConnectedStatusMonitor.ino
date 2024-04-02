@@ -53,12 +53,12 @@
   06/19/2022 - A.T. - Fix some compiler warnings.
   01/18/2023 - A.T. - Rename Slim sensor to Sensor3
   03/26/2024 - Andy4495 - Rename to Large Pond and Small Pond
+  01-Apr-2024 - Andy4495 - Add GitHub URL for modified Kentec_35_SPI library
+                         - Update to support ArduinoJson library version 7
 
   *** IMPORTANT ***
-    The Kentec_35_SPI library has an issue where the _getRawTouch() function called in the begin() method
-    can get stuck in an endless loop. Therefore, for proper operation of the display, it is necessary to
-    comment out the call to _getRaw_Touch() in the begin() method in the file Screen_K35_SPI.cpp in the
-    Kentec_35_SPI library.
+    This sketch uses a modified version of Energia's Kentec_35_SPI library so that it works with
+    this hardware configuration and TM4C129 LaunchPad: https://github.com/Andy4495/Kentec_35_SPI
   * ***************
     This sketch uses a modified version of SparkFun's MicroOLED library so that it compiles with Energia
     and works with MSP and TM4C129 processors:  https://github.com/Andy4495/SparkFun_Micro_OLED_Arduino_Library
@@ -72,7 +72,7 @@
     Deal with JSON parse failure -- maybe just display last good value (i.e., no display indication of bad JSON)
 
 */
-#include <ArduinoJson.h>             // From https://arduinojson.org/, version 6.x
+#include <ArduinoJson.h>             // From https://arduinojson.org/, version 7.x
 #include <SPI.h>
 #include <Ethernet.h>
 #include <EthernetUdp.h>
@@ -80,7 +80,7 @@
 #include "dst.h"
 
 
-#include "Screen_K35_SPI.h"
+#include "Screen_K35_SPI.h"          // From https://github.com/Andy4495/Kentec_35_SPI
 Screen_K35_SPI myScreen;
 // ThingSpeakKeys.h is not included in the code distribution, since it contains private key info
 // This file should #define the following:
@@ -115,10 +115,6 @@ byte packetBuffer[NTP_PACKET_SIZE]; //buffer to hold incoming & outgoing packets
 char receiveBuffer[1024] = {};
 char printBuffer[32] = {};
 char prevPrintBuffer[32] = {};
-
-// Based on the Arduinojson.org site, this is the size needed for the buffer for the longest message (weather station)
-// (Actually, the final term could be "+ 542", but I changed it to "+ 600" just to be on the safe side.
-const size_t bufferSize = JSON_ARRAY_SIZE(1) + JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(10) + JSON_OBJECT_SIZE(16) + 600;
 
 // Initialize the Ethernet client library
 // with the IP address and port of the server
@@ -278,8 +274,6 @@ void setup() {
     }
   */
 
-  Serial.print("JsonBuffer size: ");
-  Serial.println(bufferSize);
   Serial.println("Connecting to NTP....");
 
   //  DisplayCharacterMap(); // For testing
@@ -409,7 +403,7 @@ void GetThingSpeakField(EthernetClient* c, const char* chan, const char* key, co
 
 void getAndDisplayWeather() {
 
-  DynamicJsonDocument doc(bufferSize);
+  JsonDocument doc;
 
   unsigned int i = 0;
   signed char c;
@@ -553,7 +547,7 @@ void getAndDisplayWeather() {
 
 void getPressure() {
 
-  DynamicJsonDocument doc(bufferSize);
+  JsonDocument doc;
 
   unsigned int i = 0;
   signed char c;
@@ -652,7 +646,7 @@ void getPressure() {
 
 void getAndDisplaySensor3() {
 
-  DynamicJsonDocument doc(bufferSize);
+  JsonDocument doc;
 
   unsigned int i = 0;
   signed char c;
@@ -759,7 +753,7 @@ void getAndDisplaySensor3() {
 
 void getAndDisplaySensor5() {
 
-  DynamicJsonDocument doc(bufferSize);
+  JsonDocument doc;
 
   unsigned int i = 0;
   signed char c;
@@ -868,7 +862,7 @@ void getAndDisplaySensor5() {
 
 void getAndDisplayWorkshop() {
 
-  DynamicJsonDocument doc(bufferSize);
+  JsonDocument doc;
 
   unsigned int i = 0;
   signed char c;
@@ -950,7 +944,7 @@ void getAndDisplayWorkshop() {
 
 void getAndDisplayPond() {
 
-  DynamicJsonDocument doc(bufferSize);
+  JsonDocument doc;
 
   unsigned int i = 0;
   signed char c;
@@ -996,11 +990,11 @@ void getAndDisplayPond() {
     const char* channel_description = channel["description"]; // "Various sensor readings at the pond. "
     const char* channel_latitude = channel["latitude"]; // "0.0"
     const char* channel_longitude = channel["longitude"]; // "0.0"
-    const char* channel_field1 = channel["field1"]; // "Air Temp"
-    const char* channel_field2 = channel["field2"]; // "Submerged Temp"
-    const char* channel_field3 = channel["field3"]; // "Battery mV"
-    const char* channel_field4 = channel["field4"]; // "Millis"
-    const char* channel_field5 = channel["field5"]; // "Pump Status"
+    const char* channel_field1 = channel["field1"]; // "Small Pond"
+    const char* channel_field2 = channel["field2"]; // "Large Pond"
+    const char* channel_field3 = channel["field3"]; // "Vcc"
+    const char* channel_field4 = channel["field4"]; // "Loops"
+    const char* channel_field5 = channel["field5"]; // "WiFi RSSI"
     const char* channel_field6 = channel["field6"]; // "Aerator Status"
     const char* channel_created_at = channel["created_at"]; // "2018-09-09T19:02:08Z"
     const char* channel_updated_at = channel["updated_at"]; // "2018-09-09T23:27:23Z"
@@ -1048,7 +1042,7 @@ void getAndDisplayPond() {
 
 void getAndDisplayGarage() {
 
-  DynamicJsonDocument doc(bufferSize);
+  JsonDocument doc;
 
   uint16_t doorColor;
 

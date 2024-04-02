@@ -46,80 +46,18 @@ The OLED is controlled using parallel-8080 mode. While the OLED also supports SP
 
 The Connected LaunchPad supports Ethernet Link (LED4) and Activity (LED3) status indicators. However, I find these LEDs are bright and distracting. They are disabled by default. The code to enable them is in the sketch, but is commented out.
 
-## Kentec Display Library
-
-The [LCD display][2] requires the Screen_K35_SPI library. This library is included in the MSP430 boards package with Energia, but not included in the Tiva boards package until version 1.0.4. The library requires some minor modifications to work with the TM4C1294 LauchPad. These steps need to be performed any time you upgrade Energia or the Tiva boards package version.
-
-Note that the sketch will compile without modifying the library as outlined in steps 2 through 6 below. The `compile-sketches` action does not use a modified library. **However, the library *must* be updated for proper operation of the sketch on the hardware used for this project.**
-
-Step 1. uses Windows-specific paths. Mac and Linux paths are similar once you find the top-level installation directory.
-
-1. If you are using Tiva boards package version 1.0.3 or earlier, copy the directory `Kentec_35_SPI` from `<Energia Install Directory>\energia-1.8.7E21\hardware\energia\msp430\libraries` to `~\AppData\Local\Energia15\packages\energia\hardware\tivac\1.0.3\libraries`
-
-   - This step is not needed if you are running Tiva boards package 1.0.4 or later.
-
-2. In file `LCD_screen_font.h`, add the following to the end of line 48:
-
-   ```cpp
-   || defined(__TM4C1294NCPDT__)
-   ```
-
-   This enables the large 12x8 font size (font size 3).
-
-3. In file `Screen_K35_SPI.cpp`, add the following to the end of line 143:
-
-   ```cpp
-   || defined(__TM4C1294NCPDT__)
-   ```
-
-    This selects the correct SPI port when connecting the Kentec display to "Booster Pack 1" connectors on the Connected LaunchPad.
-
-4. In file `library.properties`, add the following to the end of line 9:
-
-   ```cpp
-   ,tivac
-   ```
-
-    This keeps the IDE from complaining about a posssible incompatible library.
-
-   - This step is not needed if you are running Tiva boards package version 1.0.4 or later.
-
-5. In the file `Screen_K35_SPI.cpp`, comment out the `_getRawTouch()` function call in the `begin()` method:
-
-   ```cpp
-   //    _getRawTouch(x0, y0, z0);
-   ```
-
-   The library has an issue where this function can get stuck in an endless loop.
-
-6. In the file `Screen_K35_SPI.cpp`, change the following in the begin() method from:
-
-   ```cpp
-   analogWrite(_pinScreenBackLight, 127);
-   ```
-
-   To:
-
-   ```cpp
-   #if defined(__TM4C1294NCPDT__)
-   digitalWrite(_pinScreenBackLight, HIGH);
-   #warning Connected LaunchPad platform backlight control
-   #else
-   analogWrite(_pinScreenBackLight, 127);
-   #endif
-   ```
-
-    This is needed because the pin that I have connected to the LCDs backlight control is a digital-only pin and does not support PWM.
-
 ## External Libraries
 
 - [ArduinoJson][3]
-  - Sketch has been updated to suport [version 6][15]
+  - Sketch has been updated to suport the [version 7][17] API. Earlier versions of the library are not supported
+  - Version 7 increased flash usage by about 1200 bytes, but this is still a small portion of the overall flash size (1 MB)
 - [Arduino Time Library][5]
-  - The code currently requires version 1.5 of the `Time` library. Version 1.6 and later use `pgm_read_ptr` instead of `pgm_read_word`, which causes a compile error with the Tiva board package.
+  - The code currently requires version 1.5 of the `Time` library. Version 1.6 and later use `pgm_read_ptr` instead of `pgm_read_word`, which causes a compile error with the Tiva board package
 - [FutabaUsVfd162S Library][8]
 - Modified [SparkFun Micro OLED Library][13]
   - This modified version is required in order to support compilation with the Tiva board
+- [Kentec_35_SPI][16]
+  - Version v2.0.0, modified from the library included with Tiva board package to support TM4C129 and this project configuration
 
 ## References
 
@@ -150,8 +88,10 @@ The software and other files in this repository are released under what is commo
 [12]: https://www.sparkfun.com/products/13003
 [13]: https://github.com/Andy4495/SparkFun_Micro_OLED_Arduino_Library
 [14]: hardware/README.md
-[15]: https://arduinojson.org/v6/doc/upgrade/
+[16]: https://github.com/Andy4495/Kentec_35_SPI
+[17]: https://arduinojson.org/news/2024/01/03/arduinojson-7/
 [100]: https://choosealicense.com/licenses/mit/
 [101]: ./LICENSE
 [//]: # ([200]: https://github.com/Andy4495/ConnectedStatusMonitor)
 [//]: # ( [9]: https://www.allelectronics.com/mas_assets/media/allelectronics2018/spec/VFD-162.pdf )
+[//]: # ( [15]: https://arduinojson.org/v6/doc/upgrade/ )
