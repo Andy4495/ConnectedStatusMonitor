@@ -1,7 +1,7 @@
 # Connected IoT Status Monitor
 
 [![Arduino Compile Sketches](https://github.com/Andy4495/ConnectedStatusMonitor/actions/workflows/arduino-compile-sketches.yml/badge.svg)](https://github.com/Andy4495/ConnectedStatusMonitor/actions/workflows/arduino-compile-sketches.yml)
-[![Check Markdown Links](https://github.com/Andy4495/ConnectedStatusMonitor/actions/workflows/CheckMarkdownLinks.yml/badge.svg)](https://github.com/Andy4495/ConnectedStatusMonitor/actions/workflows/CheckMarkdownLinks.yml)
+[![Check Markdown Links](https://github.com/Andy4495/ConnectedStatusMonitor/actions/workflows/check-links.yml/badge.svg)](https://github.com/Andy4495/ConnectedStatusMonitor/actions/workflows/check-links.yml)
 
 Status display sketch and hardware to display various sensor data readings that are queried from the [ThingSpeak][6] IoT Platform.
 
