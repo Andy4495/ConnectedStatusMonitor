@@ -6,8 +6,8 @@
    Manually edit for other locations.
 */
 
-#define DST_FIRST_YEAR    2018
-#define MAX_DST_YEAR      2029
+#define DST_FIRST_YEAR    2025
+#define MAX_DST_YEAR      2035
 
 #define DAYLIGHT_TZ_STRING "CDT"
 #define STANDARD_TZ_STRING "CST"
@@ -18,19 +18,19 @@
 #define DST_EFFECTIVE_HOUR 2  // The early morning hour that DST starts or stops
 
 // DST changeover dates (USA)
+// From: https://aa.usno.navy.mil/data/daylight_time
 // Data format: dst starting month, day, dst ending month, day
 const int dst_info[] = {
-  3, 11, 11, 4,        // 2018
-  3, 10, 11, 3,        // 2019
-  3,  8, 11, 1,        // 2020
-  3, 14, 11, 7,        // 2021
-  3, 13, 11, 6,        // 2022
-  3, 12, 11, 5,        // 2023
-  3, 10, 11, 3,        // 2024
   3,  9, 11, 2,        // 2025
   3,  8, 11, 1,        // 2026
   3, 14, 11, 7,        // 2027
   3, 12, 11, 5,        // 2028
-  3, 11, 11, 4         // 2029
+  3, 11, 11, 4,        // 2029
+  3, 10, 11, 3,        // 2030
+  3,  9, 11, 2,        // 2031
+  3, 14, 11, 7,        // 2032
+  3, 13, 11, 6,        // 2033
+  3, 12, 11, 5,        // 2034
+  3, 11, 11, 4         // 2035
 };
 #endif

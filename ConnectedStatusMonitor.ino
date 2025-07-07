@@ -1183,7 +1183,7 @@ void getAndDisplayTime() {
 
     /*    /// Test Code
         int k, l;
-        //  i = (2029 - DST_FIRST_YEAR) * 4;
+        //  i = (MAX_DST_YEAR - DST_FIRST_YEAR) * 4;
         i = 0;
         theHour = 1;
         for (k = 1; k < 13; k++)   // Cycle through months
